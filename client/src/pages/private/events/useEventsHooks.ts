@@ -6,6 +6,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import useEventsRequest from "../../../config/data/events";
 import EventsServices from "../../../config/service/events";
 import { Events } from "../../../types";
+import dayjs from "dayjs";
 
 export default function useEventsHooks() {
   const queryClient = useQueryClient(); 
@@ -25,6 +26,7 @@ export default function useEventsHooks() {
   const handleAddOrEditEvent = (values: Events) => {
     const formData = new FormData();
     formData.append("eventName", values.eventName);
+    formData.append("description", values.description);
     formData.append("eventYear", new Date().getFullYear.toString());
     formData.append("eventstartDate", new Date(values.eventstartDate).toISOString());
     formData.append("eventendDate", new Date(values.eventendDate).toISOString());
@@ -50,6 +52,8 @@ export default function useEventsHooks() {
   const showModal = (team: Events | null = null) => {
     setEditingEvents(team);
     if (team) {
+      team.eventendDate = dayjs(team.eventendDate)
+      team.eventstartDate = dayjs(team.eventstartDate)
       form.setFieldsValue(team);
     } else {
       form.resetFields();
