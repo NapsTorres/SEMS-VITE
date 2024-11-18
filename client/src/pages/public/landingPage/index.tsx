@@ -1,5 +1,5 @@
-import React, { useRef } from "react";
-import { Button, Card, Menu } from "antd";
+import { useRef } from "react";
+import { Button, Card } from "antd";
 import { Swiper, SwiperSlide } from "swiper/react";
 import "swiper/css";
 import "swiper/css/navigation";
@@ -80,30 +80,27 @@ export const LandingPage = () => {
       team1Logo: "/caf.jpg",
       team2: "College og Criminal Justice Education",
       team2Logo: "/ccje.jpg",
-      sport:"BasketBall",
       date: "March 10, 2024",
       time: "5:00 PM",
-      location: "NCF Covered Court",
+      location: "City Arena",
     },
     {
       team1: "College of Arts and Sciences",
       team1Logo: "/cas.jpg",
       team2: "College of Computer Studies",
       team2Logo: "/ccs.png",
-      sport:"BasketBall",
       date: "March 15, 2024",
       time: "6:30 PM",
-      location: "NCF Covered Court",
+      location: "National Stadium",
     },
     {
       team1: "College of Business and Management",
       team1Logo: "/cbm.jpg",
       team2: "College of Health Science",
       team2Logo: "/chs.jpg",
-      sport:"BasketBall",
       date: "March 18, 2024",
       time: "7:00 PM",
-      location: "NCF Covered Court",
+      location: "Downtown Gym",
     },
   ];
 
@@ -234,7 +231,6 @@ export const LandingPage = () => {
                   <th className="py-3 px-4 font-medium text-left">Team 1</th>
                   <th className="py-3 px-4 font-medium text-left"></th>
                   <th className="py-3 px-4 font-medium text-left">Team 2</th>
-                  <th className="py-3 px-4 font-medium text-left">Sport</th>
                   <th className="py-3 px-4 font-medium text-left">Date</th>
                   <th className="py-3 px-4 font-medium text-left">Time</th>
                   <th className="py-3 px-4 font-medium text-left">Location</th>
@@ -267,7 +263,6 @@ export const LandingPage = () => {
                         {schedule.team2}
                       </span>
                     </td>
-                    <td className="py-4 px-4 text-gray-700">{schedule.sport}</td>
                     <td className="py-4 px-4 text-gray-700">{schedule.date}</td>
                     <td className="py-4 px-4 text-gray-700">{schedule.time}</td>
                     <td className="py-4 px-4 text-gray-700">
@@ -330,7 +325,7 @@ export const LandingPage = () => {
 
           {/* Thumbnails Swiper */}
           <Swiper
-            onSwiper={(swiper) => (thumbsSwiperRef.current = swiper)} // Set the Swiper instance for thumbnails
+            onSwiper={(swiper) => (thumbsSwiperRef.current = swiper)}
             spaceBetween={10}
             slidesPerView={4}
             freeMode={true}
