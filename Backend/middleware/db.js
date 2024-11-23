@@ -3,7 +3,7 @@ const pool = createPool({
   host: 'localhost',
   user: 'root',
   password: '',
-  database: 'try111',
+  database: 'sems',
   port: 3306,
   connectTimeout: 120000  // 120 seconds
 });
