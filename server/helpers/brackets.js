@@ -1,4 +1,7 @@
 const db = require("../middleware/db");
+const util = require("util");
+const pool = require("../middleware/db");
+const queryAsync = util.promisify(pool.query).bind(pool);
 
 exports.generateMatches = async (req, res) => {
   const { eventId } = req.params;
@@ -27,7 +30,8 @@ exports.generateMatches = async (req, res) => {
 
 const generateSingleEliminationMatches = async (
   sportEventsId,
-  firstRoundMatches
+  firstRoundMatches,
+  sportsId
 ) => {
   const bracketQuery =
     "INSERT INTO brackets (sportsId, bracketType, isElimination) VALUES (?, ?, ?)";
@@ -36,7 +40,7 @@ const generateSingleEliminationMatches = async (
 
   const [bracketResult] = await db
     .promise()
-    .query(bracketQuery, [sportEventsId, "Single Elimination Bracket", true]);
+    .query(bracketQuery, [sportsId, "Single Elimination Bracket", true]);
   const bracket_id = bracketResult.insertId;
 
   let currentRoundMatchIds = [];
@@ -113,7 +117,7 @@ const generateSingleEliminationMatches = async (
   }
 };
 
-const generateDoubleEliminationMatches = async (sportEventsId, firstRoundMatches) => {
+const generateDoubleEliminationMatches = async (sportEventsId, firstRoundMatches,sportsId) => {
   const bracketQuery =
     "INSERT INTO brackets (sportsId, bracketType, isElimination) VALUES (?, ?, ?)";
   const matchQuery =
@@ -121,13 +125,13 @@ const generateDoubleEliminationMatches = async (sportEventsId, firstRoundMatches
 
   const [winnerBracketResult] = await db
     .promise()
-    .query(bracketQuery, [sportEventsId, "Winner Bracket", true]);
+    .query(bracketQuery, [sportsId, "Winner Bracket", true]);
   const [loserBracketResult] = await db
     .promise()
-    .query(bracketQuery, [sportEventsId, "Loser Bracket", true]);
+    .query(bracketQuery, [sportsId, "Loser Bracket", true]);
   const [finalRematchBracketResult] = await db
     .promise()
-    .query(bracketQuery, [sportEventsId, "Final Rematch", true]);
+    .query(bracketQuery, [sportsId, "Final Rematch", true]);
 
   const winner_bracket_id = winnerBracketResult.insertId;
   const loser_bracket_id = loserBracketResult.insertId;
@@ -376,7 +380,7 @@ const generateDoubleEliminationMatches = async (sportEventsId, firstRoundMatches
 };
 
 
-const generateRoundRobinMatches = async (sportEventsId, teams) => {
+const generateRoundRobinMatches = async (sportEventsId, teams,sportsId) => {
 
   const bracketQuery =
     "INSERT INTO brackets (sportsId, bracketType, isElimination) VALUES (?, ?, ?)";
@@ -385,7 +389,7 @@ const generateRoundRobinMatches = async (sportEventsId, teams) => {
 
   const [bracketResult] = await db
     .promise()
-    .query(bracketQuery, [sportEventsId, "Round Robin Bracket", false]);
+    .query(bracketQuery, [sportsId, "Round Robin Bracket", false]);
   const bracket_id = bracketResult.insertId;
 
   const numTeams = teams.length;
@@ -427,7 +431,6 @@ const generateRoundRobinMatches = async (sportEventsId, teams) => {
         ]);
     }
   }
-  console.log(schedule)
 };
 
 const advanceWinnerToNextMatch = async (winnerId, nextMatchId) => {
@@ -458,23 +461,47 @@ const advanceWinnerToNextMatch = async (winnerId, nextMatchId) => {
 };
 
 async function setTeamInNextMatch(matchId, teamId) {
-  const [match] = await db
-    .promise()
-    .query("SELECT * FROM matches WHERE matchId = ?", [matchId]);
-  if (match.length === 0) return;
+  if (!teamId) {
+    console.error("Invalid teamId provided:", teamId);
+    return;
+  }
 
-  // Check if team1Id is empty, if so, update it with teamId, otherwise update team2Id
-  const updateField = match[0].team1Id === null ? "team1Id" : "team2Id";
+  try {
+    const match = await queryAsync("SELECT team1Id, team2Id FROM matches WHERE matchId = ?", [matchId]);
+    console.log(match)
+    if (match.length === 0) {
+      console.error(`Match with matchId ${matchId} not found.`);
+      return;
+    }
 
-  await db
-    .promise()
-    .query(`UPDATE matches SET ${updateField} = ? WHERE matchId = ?`, [
-      teamId,
-      matchId,
-    ]);
+    const { team1Id, team2Id } = match[0];
+
+    let updateField;
+    if (team1Id === null) {
+      updateField = "team1Id";
+    } else if (team2Id === null) {
+      updateField = "team2Id";
+    } else {
+      console.error(
+        `Both team1Id and team2Id are already set for matchId ${matchId}.`
+      );
+      return; 
+    }
+
+    const res = await queryAsync(`UPDATE matches SET ${updateField} = ? WHERE matchId = ?`, [
+        teamId,
+        matchId,
+      ]);
+
+    console.log(
+      `Successfully updated ${updateField} in match ${matchId} with teamId ${teamId}.${res}`
+    );
+  } catch (error) {
+    console.error("Error in setTeamInNextMatch:", error);
+  }
 }
 
-// Helper function to check if a champion has been determined or if a rematch is needed
+
 async function checkForChampion(winnerTeamId, loserTeamId, match) {
   if (match.isFinal && match.bracketType === "winners") {
     const losersFinalMatch = await db
@@ -483,7 +510,6 @@ async function checkForChampion(winnerTeamId, loserTeamId, match) {
         "SELECT * FROM matches WHERE bracketType = 'losers' AND isFinal = 1"
       );
 
-    // Check if the losers bracket champion has won the final
     if (
       losersFinalMatch.length === 1 &&
       losersFinalMatch[0].winner_team_id === loserTeamId
@@ -495,7 +521,6 @@ async function checkForChampion(winnerTeamId, loserTeamId, match) {
         );
 
       if (existingResetMatch.length === 0) {
-        // Create a reset match if it doesn't already exist
         await db
           .promise()
           .query(
@@ -511,20 +536,41 @@ async function checkForChampion(winnerTeamId, loserTeamId, match) {
               "reset",
             ]
           );
-        return null; // No champion yet, rematch created
+        return null; 
       } else {
-        return null; // No champion yet, waiting for reset match
+        return null; 
       }
     }
   }
 
-  // If it's a reset final and completed, determine the champion
   if (match.bracketType === "reset" && match.isFinal) {
-    return winnerTeamId; // Winner of the reset match is the champion
+    return winnerTeamId; 
   }
 
   return null;
 }
+
+const updateTeamStanding = async (winnerTeamId, loserTeamId) => {
+  try {
+    await db
+    .promise()
+    .query(
+      "UPDATE teams_events SET teamWin = teamWin + 1 WHERE teamId = ?",
+      [winnerTeamId]
+    );
+
+    await db
+    .promise()
+    .query(
+      "UPDATE teams_events SET teamLose = teamLose + 1 WHERE teamId = ?",
+      [loserTeamId]
+    );
+  } catch (error) {
+    console.error("Error updating team standings:", error);
+    throw new Error("Failed to update team standings");
+  }
+};
+
 
 module.exports = {
   generateDoubleEliminationMatches,
@@ -532,4 +578,5 @@ module.exports = {
   generateRoundRobinMatches,
   setTeamInNextMatch,
   checkForChampion,
+  updateTeamStanding
 };

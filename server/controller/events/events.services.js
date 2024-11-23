@@ -4,6 +4,7 @@ const {
   generateRoundRobinMatches,
   setTeamInNextMatch,
   checkForChampion,
+  updateTeamStanding,
 } = require("../../helpers/brackets.js");
 const {
   getSportsEventsWithDetails,
@@ -82,59 +83,61 @@ module.exports = {
   },
 
   fetchEventById: async (data) => {
-    const eventId = data.eventId
-    console.log(data)
+    const eventId = data.eventId;
+   
     if (!eventId) {
       return { success: 0, message: "Invalid event ID provided." };
     }
-  
+
     try {
-      const event = await queryAsync("SELECT * FROM events WHERE eventId = ?", [eventId]);
-      console.log("Fetched event:", event);
-  
+      const event = await queryAsync("SELECT * FROM events WHERE eventId = ?", [
+        eventId,
+      ]);
+
       if (!event.length) {
         return { success: 1, results: { event: null, sportsEvents: [] } };
       }
-  
+
       const sportsEvents = await queryAsync(
         "SELECT * FROM sports_events WHERE eventsId = ?",
         [eventId]
       );
-      console.log("Fetched sports events:", sportsEvents);
-  
-      const sportsEventsWithDetails = await getSportsEventsWithDetails(sportsEvents);
-  
+
+      const sportsEventsWithDetails = await getSportsEventsWithDetails(
+        sportsEvents
+      );
+
       const details = {
         event: event[0],
         sportsEvents: sportsEventsWithDetails,
       };
-  
+
       return { success: 1, results: details };
     } catch (error) {
       console.error("Error fetching event by ID:", error);
       return { success: 0, message: error.message };
     }
-  },  
+  },
 
   addSportsEvents: async (data) => {
     try {
-      const teams = JSON.parse(data.teams || [])
+      const teams = JSON.parse(data.teams || []);
       if (!teams.length) {
         return { success: 0, message: "No teams to process" };
       }
       const res = await queryAsync(
-        "INSERT INTO sports_events (sportsId, eventsId, bracketType) VALUES (?, ?, ?)",
-        [data.sportsId, data.eventsId, data.bracketType]
+        "INSERT INTO sports_events (sportsId, eventsId, bracketType,maxPlayers) VALUES (?, ?, ?,?)",
+        [data.sportsId, data.eventsId, data.bracketType, data.maxPlayers]
       );
       const sportEventsId = res.insertId;
       const teamToInsert = teams.map((team) => [
         sportEventsId,
-        team.teamCoach,
         team.teamName,
         team.teamId,
+        team.teamCoach,
       ]);
       await queryAsync(
-        "INSERT INTO teams_events (sportEventsId, teamCoach, teamName,teamId) VALUES ?",
+        "INSERT INTO teams_events (sportEventsId, teamName,teamId,coachId) VALUES ?",
         [teamToInsert]
       );
 
@@ -150,17 +153,17 @@ module.exports = {
 
   generateMatch: async (data) => {
     try {
-      let { sportEventsId, teams, bracketType } = data;
+      let { sportEventsId,sportsId, teams, bracketType } = data;
 
       switch (bracketType) {
         case "Single Elimination":
-          await generateSingleEliminationMatches(sportEventsId, teams);
+          await generateSingleEliminationMatches(sportEventsId, teams,sportsId);
           break;
         case "Double Elimination":
-          await generateDoubleEliminationMatches(sportEventsId, teams);
+          await generateDoubleEliminationMatches(sportEventsId, teams,sportsId);
           break;
         case "Round Robin":
-          await generateRoundRobinMatches(sportEventsId, teams);
+          await generateRoundRobinMatches(sportEventsId, teams,sportsId);
           break;
         default:
           return { success: 0, message: "Invalid bracket type" };
@@ -171,13 +174,13 @@ module.exports = {
         message: `${bracketType} matches generated successfully`,
       };
     } catch (error) {
-      console.log(error);
       return { success: 0, message: error.message };
     }
   },
 
   bracketMatch: async (data) => {
     try {
+      console.log(data)
       const sportsId = data.sportEventsId;
       const res = await queryAsync(
         "SELECT * FROM brackets where sportsId = ?",
@@ -196,7 +199,6 @@ module.exports = {
         },
       };
     } catch (error) {
-      console.log(error);
       return { success: 0, message: error.message };
     }
   },
@@ -223,10 +225,13 @@ module.exports = {
       }
 
       let winnerId;
+      let loserId;
       if (team1Score > team2Score) {
         winnerId = team1Id;
+        loserId = team2Id
       } else if (team2Score > team1Score) {
         winnerId = team2Id;
+        loserId = team1Id
       } else {
         return {
           success: 0,
@@ -245,6 +250,8 @@ module.exports = {
           [next_match_id]
         );
 
+        await updateTeamStanding(winnerId, loserId);
+
         if (nextMatch.length > 0) {
           const nextMatchRecord = nextMatch[0];
           const updateField = nextMatchRecord.team1Id ? "team2Id" : "team1Id";
@@ -252,9 +259,6 @@ module.exports = {
           await queryAsync(
             `UPDATE matches SET ${updateField} = ? WHERE matchId = ?`,
             [winnerId, next_match_id]
-          );
-          console.log(
-            `Winner Team ${winnerId} advanced to match ${next_match_id}`
           );
         }
       }
@@ -272,7 +276,7 @@ module.exports = {
 
   doubleSetWinner: async (data) => {
     const { team1Score, team2Score, matchId } = data;
-
+    
     try {
       const matchResult = await queryAsync(
         "SELECT * FROM matches WHERE matchId = ?",
@@ -310,20 +314,18 @@ module.exports = {
         [team1Score, team2Score, winnerTeamId, matchId]
       );
 
-      if (bracketType === "winners") {
-        if (next_match_id) {
-          await setTeamInNextMatch(next_match_id, winnerTeamId);
-        }
-        if (loser_next_match_id) {
-          await setTeamInNextMatch(loser_next_match_id, loserTeamId);
-        }
-      } else if (bracketType === "losers") {
-        if (next_match_id) {
-          await setTeamInNextMatch(next_match_id, winnerTeamId);
-        } else if (loser_next_match_id) {
-          await setTeamInNextMatch(loser_next_match_id, winnerTeamId);
-        }
+      await updateTeamStanding(winnerTeamId, loserTeamId);
+
+      if (next_match_id) {
+        console.log(`Updating winner to next match: ${next_match_id}`);
+        await setTeamInNextMatch(next_match_id, winnerTeamId);
       }
+  
+      if (loser_next_match_id) {
+        console.log(`Updating loser to next match: ${loser_next_match_id}`);
+        await setTeamInNextMatch(loser_next_match_id, loserTeamId);
+      }
+      
 
       const champion = await checkForChampion(winnerTeamId, loserTeamId, match);
       if (champion) {
@@ -364,10 +366,13 @@ module.exports = {
       }
 
       let winnerId;
+      let loserId;
       if (team1Score > team2Score) {
         winnerId = team1Id;
+        loserId = team2Id
       } else if (team2Score > team1Score) {
         winnerId = team2Id;
+        loserId = team1Id
       } else {
         return {
           success: 0,
@@ -379,6 +384,9 @@ module.exports = {
         'UPDATE matches SET team1Score = ?, team2Score = ?, winner_team_id = ?, status = "Completed" WHERE matchId = ?',
         [team1Score, team2Score, winnerId, matchId]
       );
+
+      await updateTeamStanding(winnerId, loserId);
+
       return {
         success: 1,
         message: "Match scores updated successfully",
@@ -391,8 +399,8 @@ module.exports = {
   },
 
   setSchedule: async (data) => {
-    console.log(data);
-    const { schedule, matchId,venue } = data;
+   
+    const { schedule, matchId, venue } = data;
 
     if (!schedule) {
       return { success: 0, error: "Schedule is required." };
@@ -410,7 +418,7 @@ module.exports = {
 
       await queryAsync(
         'UPDATE matches SET schedule = ?, status = "Scheduled", venue = ? WHERE matchId = ?',
-        [schedule,venue, matchId]
+        [schedule, venue, matchId]
       );
 
       return { success: 1, message: "Match schedule updated successfully." };
@@ -419,6 +427,91 @@ module.exports = {
       return {
         success: 0,
         error: "An error occurred while updating the match schedule.",
+      };
+    }
+  },
+  eventsListSports: async () => {
+    try {
+      const query = `
+        SELECT 
+          e.eventId,
+          e.eventName,
+          e.eventYear,
+          e.eventStartDate,
+          e.eventEndDate,
+          e.createdAt,
+          e.description,
+          se.sportEventsId,
+          se.sportsId,
+          se.bracketType,
+          s.sportsName,
+          s.sportsLogo,
+          s.description AS sportDescription
+        FROM events AS e
+        LEFT JOIN sports_events AS se ON e.eventId = se.eventsId
+        LEFT JOIN sports AS s ON se.sportsId = s.sportsId
+        ORDER BY e.eventId;
+      `;
+
+      const results = await queryAsync(query);
+
+      const events = results.reduce((acc, row) => {
+        const {
+          eventId,
+          eventName,
+          eventYear,
+          eventStartDate,
+          eventEndDate,
+          createdAt,
+          description,
+          sportEventsId,
+          sportsId,
+          bracketType,
+          sportsName,
+          sportsLogo,
+          sportDescription,
+        } = row;
+
+        // Find or create the event entry
+        let event = acc.find((e) => e.eventId === eventId);
+        if (!event) {
+          event = {
+            eventId,
+            eventName,
+            eventYear,
+            eventStartDate,
+            eventEndDate,
+            createdAt,
+            description,
+            sportsEvents: [],
+          };
+          acc.push(event);
+        }
+
+        // If there are sports events, add them to the event's sportsEvents array
+        if (sportEventsId) {
+          event.sportsEvents.push({
+            sportEventsId,
+            sportsId,
+            bracketType,
+            sportsName,
+            sportsLogo,
+            sportDescription,
+          });
+        }
+
+        return acc;
+      }, []);
+
+      return {
+        success: 1,
+        results: events,
+      };
+    } catch (error) {
+      console.error("Error fetching events with sports:", error);
+      return {
+        success: 0,
+        message: "An error occurred while fetching the events list.",
       };
     }
   },
