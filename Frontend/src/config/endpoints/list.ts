@@ -40,12 +40,14 @@ const Api = {
     EDIT: ApiEndpoint(base + '/edit'),
     DELETE: ApiEndpoint(base + '/delete'),
   }),
-  GAMES:(base = '/games') =>({
+  GAMES: (base = '/games') => ({
     LIST: ApiEndpoint(base + '/schedule'),
     ID: ApiEndpoint(base + '/match'),
     INCREMENT: ApiEndpoint(base + '/increment-score'),
+    DECREMENT: ApiEndpoint(base + '/decrement-score'),  // Added the DECREMENT endpoint
     STATUS: ApiEndpoint(base + '/status'),
   }),
+  
   MEDIA:(base = '/media') =>({
     LIST: ApiEndpoint(base + '/list'),
     ADD: ApiEndpoint(base + '/add'),

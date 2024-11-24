@@ -18,10 +18,10 @@ export default function useGameScorig({ matchId }: { matchId?: any }) {
 
   const { data: Match } = useFetchData(["Game"], [GamesServices.gameSchedule]);
   const { data: [MatchInfo] = [] } = useFetchData(["game-id"], [() => GamesServices.gameMatchId(matchId)]);
-  const { setScore, setScore1,setScore2 } = useEventsRequest({
+  const { setScore, setScore1, setScore2 } = useEventsRequest({
     setIsModalVisible: () => setIsModalVisible(false),
   });
-  const { incrementScoring, changingStatus } = useGameRequest({ setIsModalVisible: () => {} });
+  const { incrementScoring, decrementScoring, changingStatus } = useGameRequest({ setIsModalVisible: () => {} });
 
   useEffect(() => {
     if (MatchInfo) {
@@ -38,7 +38,18 @@ export default function useGameScorig({ matchId }: { matchId?: any }) {
     formData.append("increment", points.toString());
 
     incrementScoring(formData, {
-      onSuccess: () => queryClient.invalidateQueries({queryKey:["game-id"]}),
+      onSuccess: () => queryClient.invalidateQueries({ queryKey: ["game-id"] }),
+    });
+  };
+
+  const handleDecrementScore = (points: number, teamId: any) => {
+    const formData = new FormData();
+    formData.append("matchId", matchId);
+    formData.append("teamId", teamId);
+    formData.append("decrement", points.toString());
+
+    decrementScoring(formData, {
+      onSuccess: () => queryClient.invalidateQueries({ queryKey: ["game-id"] }),
     });
   };
 
@@ -51,7 +62,7 @@ export default function useGameScorig({ matchId }: { matchId?: any }) {
       formData.append("status", value);
 
       changingStatus(formData, {
-        onSuccess: () => queryClient.invalidateQueries({queryKey:["game-id"]}),
+        onSuccess: () => queryClient.invalidateQueries({ queryKey: ["game-id"] }),
       });
       setStatus(value);
     }
@@ -59,26 +70,32 @@ export default function useGameScorig({ matchId }: { matchId?: any }) {
 
   const updateMatch = () => {
     if (matchId && team1Score !== null && team2Score !== null) {
-        const formData = new FormData();
-        formData.append("team1Score", team1Score.toString());
-        formData.append("team2Score", team2Score.toString());
-        formData.append("matchId",matchId.toString());
-        if(!MatchInfo?.sportEvent?.bracketType){
-          notification.error({
-            message:'No bracketType detected'
-          })
-          return
-        }
-        const api = MatchInfo?.sportEvent?.bracketType === 'Single Elimination' ? setScore : MatchInfo?.sportEvent?.bracketType === 'Double Elimination' ? setScore1 : setScore2
-        api(formData, {
-          onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ["game-id"] });
-          },
+      const formData = new FormData();
+      formData.append("team1Score", team1Score.toString());
+      formData.append("team2Score", team2Score.toString());
+      formData.append("matchId", matchId.toString());
+      if (!MatchInfo?.sportEvent?.bracketType) {
+        notification.error({
+          message: "No bracketType detected",
         });
+        return;
       }
-  }
-  console.log('match',MatchInfo)
-  console.log('match1',MatchInfo?.sportEvent?.bracketType)
+      const api =
+        MatchInfo?.sportEvent?.bracketType === "Single Elimination"
+          ? setScore
+          : MatchInfo?.sportEvent?.bracketType === "Double Elimination"
+          ? setScore1
+          : setScore2;
+      api(formData, {
+        onSuccess: () => {
+          queryClient.invalidateQueries({ queryKey: ["game-id"] });
+        },
+      });
+    }
+  };
+
+  console.log("match", MatchInfo);
+  console.log("match1", MatchInfo?.sportEvent?.bracketType);
   return {
     Match,
     isFetchingMatch: !Match,
@@ -95,5 +112,6 @@ export default function useGameScorig({ matchId }: { matchId?: any }) {
     setTeam2Score,
     handleStatusChange,
     handleIncrementScore,
+    handleDecrementScore, // Added handleDecrementScore to the returned object
   };
 }
