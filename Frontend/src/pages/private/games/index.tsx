@@ -75,10 +75,20 @@ export const GameScoring = () => {
   }
 
   // Function to determine the winner
-  const getWinner = (team1Score: number, team2Score: number, team1: any, team2: any) => {
+  const getWinner = (team1Score: number, team2Score: number, team1: any, team2: any, status: string) => {
     if (team1Score > team2Score) return team1?.teamName || "Team 1";
     if (team2Score > team1Score) return team2?.teamName || "Team 2";
-    return "Draw"; // If scores are equal
+
+    // If scores are equal, check the match status
+    if (team1Score === team2Score) {
+      if (status === "completed") {
+        return "Draw"; // Draw if the status is 'completed'
+      } else {
+        return "Not Declared"; // Not declared if the match is not completed
+      }
+    }
+
+    return "Not Declared"; // Default case if no condition matches
   };
 
   return (
@@ -153,7 +163,7 @@ export const GameScoring = () => {
           const team2 = match.team2;
           const team1Score = match.team1Score || 0;
           const team2Score = match.team2Score || 0;
-          const winner = getWinner(team1Score, team2Score, team1, team2);
+          const winner = getWinner(team1Score, team2Score, team1, team2, match.status); // Pass match.status here
           const eventAndSport = `${match.event?.eventName || "Unknown Event"} - ${match.sport?.sportsName || "Unknown Sport"}`;
           const { textColor } = getStatusStyles(match.status);
 
