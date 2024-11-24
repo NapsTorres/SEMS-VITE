@@ -7,7 +7,10 @@ interface MatchCardProps {
   status: string;
   winnerTeamId: number | null;
   matchId: number;
+  team1Score?: number;  // Add team1Score as an optional property
+  team2Score?: number;  // Add team2Score as an optional property
 }
+
 
 const MatchCard: React.FC<MatchCardProps> = ({
   team1,
@@ -15,6 +18,8 @@ const MatchCard: React.FC<MatchCardProps> = ({
   status,
   winnerTeamId,
   matchId, 
+  team1Score,
+  team2Score,
 }) => {
   const isTeam1Winner = team1 && winnerTeamId === team1.teamId;
   const isTeam2Winner = team2 && winnerTeamId === team2.teamId;
@@ -50,6 +55,11 @@ const MatchCard: React.FC<MatchCardProps> = ({
         >
           {team1 ? team1.teamName : "TBD"}
         </p>
+        {team1Score !== undefined && (
+          <p className={`text-xl font-bold ${isTeam1Winner ? "text-green-500" : "text-gray-500"}`}>
+            {team1Score}
+          </p>
+        )}
       </div>
 
       <span className="text-gray-500 text-xs text-center w-full">vs</span>
@@ -73,9 +83,21 @@ const MatchCard: React.FC<MatchCardProps> = ({
         >
           {team2 ? team2.teamName : "TBD"}
         </p>
+        {team2Score !== undefined && (
+          <p className={`text-xl font-bold ${isTeam2Winner ? "text-green-500" : "text-gray-500"}`}>
+            {team2Score}
+          </p>
+        )}
       </div>
+
+      {status === "completed" && winnerTeamId && (
+        <div className="mt-2 text-center text-sm font-semibold text-blue-500">
+          Winner: {winnerTeamId === team1?.teamId ? team1?.teamName : team2?.teamName}
+        </div>
+      )}
     </div>
   );
 };
+
 
 export default MatchCard;

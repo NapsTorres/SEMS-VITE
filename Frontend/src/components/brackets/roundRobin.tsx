@@ -1,10 +1,8 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import React from "react";
 import { Match, RoundRobinHooksProps } from "../../types";
 import { dateStringFormatter } from "../../utility/utils";
 
 const RoundRobinBracket: React.FC<RoundRobinHooksProps> = ({ matches, teams }) => {
-
   const roundsMatch = matches?.reduce((acc, match) => {
     const round = acc[match.round] || [];
     round.push(match);
@@ -33,6 +31,18 @@ const RoundRobinBracket: React.FC<RoundRobinHooksProps> = ({ matches, teams }) =
                     : match.status === "Scheduled"
                     ? "text-yellow-500"
                     : "text-gray-500";
+
+                // Ensure team scores exist and are numbers
+                const team1Score = match.team1Score ?? null;
+                const team2Score = match.team2Score ?? null;
+
+                // Determine winner if scores are available
+                const winner =
+                  team1Score !== null && team2Score !== null
+                    ? team1Score > team2Score
+                      ? team1?.teamName
+                      : team2?.teamName
+                    : null;
 
                 return (
                   <div
@@ -66,9 +76,14 @@ const RoundRobinBracket: React.FC<RoundRobinHooksProps> = ({ matches, teams }) =
                       <span className={`font-semibold ${statusClass} text-lg`}>
                         Status: {match.status || "Pending"}
                       </span>
-                      {match.team1Score !== 0 && match.team2Score !== 0 && (
+                      {team1Score !== null && team2Score !== null && (
                         <span className="text-gray-700 font-bold text-lg">
-                          Score: {match.team1Score} - {match.team2Score}
+                          Score: {team1Score} - {team2Score}
+                        </span>
+                      )}
+                      {winner && (
+                        <span className="text-green-500 font-semibold text-lg mt-2">
+                          Winner: {winner}
                         </span>
                       )}
                       {match.schedule && (
@@ -84,7 +99,6 @@ const RoundRobinBracket: React.FC<RoundRobinHooksProps> = ({ matches, teams }) =
           </div>
         ))}
       </div>
-
     </div>
   );
 };

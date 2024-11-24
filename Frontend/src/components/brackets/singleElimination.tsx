@@ -33,6 +33,8 @@ const SingleEliminationBracket: React.FC<SingleEliminationBracketProps> = ({ mat
                     winnerTeamId={match.winner_team_id}
                     team1={findTeamById(match.team1Id)}
                     team2={findTeamById(match.team2Id)}
+                    team1Score={match.team1Score}  // Pass team1Score
+                    team2Score={match.team2Score}  // Pass team2Score
                   />
                 </div>
               ))}
@@ -63,5 +65,6 @@ const SingleEliminationBracket: React.FC<SingleEliminationBracketProps> = ({ mat
     </div>
   );
 };
+
 
 export default SingleEliminationBracket;

@@ -20,8 +20,11 @@ const MatchComponent: React.FC<MatchComponentProps> = ({ match, findTeamById }) 
       winnerTeamId={match.winner_team_id}
       team1={findTeamById(match.team1Id)}
       team2={findTeamById(match.team2Id)}
+      team1Score={match.team1Score}  // Pass team1's score
+      team2Score={match.team2Score}  // Pass team2's score
     />
   </div>
 );
+
 
 export default MatchComponent;
