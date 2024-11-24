@@ -26,7 +26,7 @@ const MatchCard: React.FC<MatchCardProps> = ({
 
   return (
     <div
-      className={`row-span-7 flex border flex-col justify-center gap-2 items-start rounded-lg p-6 shadow-md w-72 h-48 m-2 ${
+      className={`row-span-7 flex flex-col justify-center gap-4 items-start rounded-lg p-6 shadow-md w-80 h-64 m-2 ${
         status === "completed"
           ? "cursor-not-allowed bg-gray-200"
           : "cursor-pointer hover:bg-gray-100"
@@ -40,13 +40,13 @@ const MatchCard: React.FC<MatchCardProps> = ({
         {team1?.teamLogo ? (
           <img
             src={team1.teamLogo}
-            className={`w-12 h-12 rounded-full ${
+            className={`w-14 h-14 rounded-full ${
               !isTeam1Winner && status === "completed" ? "filter grayscale" : ""
             }`}
             alt={team1.teamName}
           />
         ) : (
-          <div className="w-12 h-12 rounded-full bg-gray-300" />
+          <div className="w-14 h-14 rounded-full bg-gray-300" />
         )}
         <p
           className={`font-semibold text-start ${
@@ -68,13 +68,13 @@ const MatchCard: React.FC<MatchCardProps> = ({
         {team2?.teamLogo ? (
           <img
             src={team2.teamLogo}
-            className={`w-12 h-12 rounded-full ${
+            className={`w-14 h-14 rounded-full ${
               !isTeam2Winner && status === "completed" ? "filter grayscale" : ""
             }`}
             alt={team2.teamName}
           />
         ) : (
-          <div className="w-12 h-12 rounded-full bg-gray-300" />
+          <div className="w-14 h-14 rounded-full bg-gray-300" />
         )}
         <p
           className={`font-semibold text-start ${
@@ -92,12 +92,16 @@ const MatchCard: React.FC<MatchCardProps> = ({
 
       {status === "completed" && winnerTeamId && (
         <div className="mt-2 text-center text-sm font-semibold text-blue-500">
-          Winner: {winnerTeamId === team1?.teamId ? team1?.teamName : team2?.teamName}
+          Winner:{" "}
+          <span className={`${winnerTeamId === team1?.teamId ? "text-blue-500" : "text-blue-500"}`}>
+            {winnerTeamId === team1?.teamId ? team1?.teamName : team2?.teamName}
+          </span>
         </div>
       )}
     </div>
   );
 };
+
 
 
 export default MatchCard;

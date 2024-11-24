@@ -17,17 +17,29 @@ export const GameScoring = () => {
   const [eventFilter, setEventFilter] = useState("all");
   const [sportFilter, setSportFilter] = useState("all");
 
-  // Helper function for status background
-  const getStatusBackground = (status: string) => {
+  // Helper function for status background and text color
+  const getStatusStyles = (status: string) => {
     switch (status) {
       case "pending":
-        return "bg-gradient-to-r from-yellow-200 to-yellow-400";
+        return {
+          bgColor: "bg-yellow-200", // Background color for pending status
+          textColor: "text-yellow-700", // Text color for pending status
+        };
       case "ongoing":
-        return "bg-gradient-to-r from-orange-300 to-orange-500";
+        return {
+          bgColor: "bg-orange-300", // Background color for ongoing status
+          textColor: "text-orange-700", // Text color for ongoing status
+        };
       case "completed":
-        return "bg-gradient-to-r from-green-300 to-green-500";
+        return {
+          bgColor: "bg-green-300", // Background color for completed status
+          textColor: "text-green-700", // Text color for completed status
+        };
       default:
-        return "bg-gradient-to-r from-yellow-200 to-yellow-400";
+        return {
+          bgColor: "bg-gray-200", // Background color for default status
+          textColor: "text-gray-700", // Text color for default status
+        };
     }
   };
 
@@ -62,9 +74,16 @@ export const GameScoring = () => {
     return <Spin size="large" />;
   }
 
+  // Function to determine the winner
+  const getWinner = (team1Score: number, team2Score: number, team1: any, team2: any) => {
+    if (team1Score > team2Score) return team1?.teamName || "Team 1";
+    if (team2Score > team1Score) return team2?.teamName || "Team 2";
+    return "Draw"; // If scores are equal
+  };
+
   return (
     <div className="p-5">
-      <h1 className="text-2xl font-bold mb-4">Game Schedule</h1>
+      <h1 className="text-2xl font-bold mb-4">Game Scoring</h1>
 
       {/* Filters */}
       <div className="flex flex-wrap gap-4 mb-4">
@@ -129,54 +148,68 @@ export const GameScoring = () => {
 
       {/* Matches Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
-        {filteredMatches?.map((match: any) => (
-          <div
-            key={match.matchId}
-            className={`p-4 rounded-lg grid h-max grid-rows-6 shadow-[rgba(0,_0,_0,_0.24)_0px_3px_8px] ${getStatusBackground(
-              match.status
-            )}`}
-          >
-            <h2 className="text-lg row-span-1 font-semibold text-center mb-4">
-              Round {match.round} - Match {match.matchId}
-            </h2>
-            <div className="flex row-span-3 justify-center items-center mb-4">
-              <div className="flex flex-col items-center mx-4">
-                <img
-                  src={match.team1?.teamLogo || "https://via.placeholder.com/60"}
-                  alt={match.team1?.teamName}
-                  className="w-16 h-16 rounded-full shadow-md"
-                />
-                <p className="font-semibold text-center mt-2">
-                  {match.team1?.teamName || "Team 1"}
+        {filteredMatches?.map((match: any) => {
+          const team1 = match.team1;
+          const team2 = match.team2;
+          const team1Score = match.team1Score || 0;
+          const team2Score = match.team2Score || 0;
+          const winner = getWinner(team1Score, team2Score, team1, team2);
+          const eventAndSport = `${match.event?.eventName || "Unknown Event"} - ${match.sport?.sportsName || "Unknown Sport"}`;
+          const { textColor } = getStatusStyles(match.status);
+
+          return (
+            <div
+              key={match.matchId}
+              className={`bg-white p-4 rounded-lg grid h-[400px] grid-rows-6 shadow-[rgba(0,_0,_0,_0.24)_0px_3px_8px] border-2 border-black`}
+            >
+              <h2 className="text-lg row-span-1 font-semibold text-center text-blue-700 mb-2">
+                {eventAndSport}
+              </h2>
+              <h2 className="text-lg row-span-1 font-semibold text-center mb-4">
+                Round {match.round} - Match {match.matchId}
+              </h2>
+              <div className="text-center row-span-1 mb-4">
+                <p className="text-xl font-bold">
+                  <strong>Winner:</strong> {winner}
                 </p>
               </div>
-              <p className="text-xl font-bold mx-2">VS</p>
-              <div className="flex flex-col items-center mx-4">
-                <img
-                  src={match.team2?.teamLogo || "https://via.placeholder.com/60"}
-                  alt={match.team2?.teamName}
-                  className="w-16 h-16 rounded-full shadow-md"
-                />
-                <p className="font-semibold text-center mt-2">
-                  {match.team2?.teamName || "Team 2"}
+              <div className="flex row-span-3 justify-center items-center mb-4">
+                <div className="flex flex-col items-center mx-4">
+                  <img
+                    src={team1?.teamLogo || "https://via.placeholder.com/60"}
+                    alt={team1?.teamName}
+                    className="w-16 h-16 rounded-full shadow-md"
+                  />
+                  <p className="font-semibold text-center mt-2">{team1?.teamName || "Team 1"}</p>
+                  <p className="text-lg">{team1Score}</p>
+                </div>
+                <p className="text-xl font-bold mx-2">VS</p>
+                <div className="flex flex-col items-center mx-4">
+                  <img
+                    src={team2?.teamLogo || "https://via.placeholder.com/60"}
+                    alt={team2?.teamName}
+                    className="w-16 h-16 rounded-full shadow-md"
+                  />
+                  <p className="font-semibold text-center mt-2">{team2?.teamName || "Team 2"}</p>
+                  <p className="text-lg">{team2Score}</p>
+                </div>
+              </div>
+              <div className="row-span-1 text-center mb-4">
+                <p className={`${textColor} p-1 rounded-lg inline-block`}>
+                  <strong>Status:</strong> {match.status || "Pending"}
+                </p>
+                <p>
+                  <strong>Scheduled:</strong> {new Date(match.schedule).toLocaleString()}
                 </p>
               </div>
+              <Link className="row-span-1" to={`match/${match.matchId}`}>
+                <Button type="primary" block>
+                  View Details
+                </Button>
+              </Link>
             </div>
-            <div className="row-span-1 text-center mb-4">
-              <p>
-                <strong>Status:</strong> {match.status || "Pending"}
-              </p>
-              <p>
-                <strong>Scheduled:</strong> {new Date(match.schedule).toLocaleString()}
-              </p>
-            </div>
-            <Link className="row-span-1" to={`match/${match.matchId}`}>
-              <Button type="primary" block>
-                Update Match
-              </Button>
-            </Link>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       {/* Pagination */}
