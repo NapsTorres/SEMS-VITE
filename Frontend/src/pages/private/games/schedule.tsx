@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import {
   Button,
   Pagination,
@@ -63,6 +62,22 @@ export const GameSchedule = () => {
   };
 
   const columns = [
+    {
+      title: "Event",
+      dataIndex: "event",
+      key: "event",
+      render: (_text: any, record: any) => (
+        <Text>{record.event?.eventName || "No Event"}</Text>
+      ),
+    },
+    {
+      title: "Sport",
+      dataIndex: "sport",
+      key: "sport",
+      render: (_text: any, record: any) => (
+        <Text>{record.sport?.sportsName || "No Sport"}</Text>
+      ),
+    },
     {
       title: "Match",
       dataIndex: "matchId",
