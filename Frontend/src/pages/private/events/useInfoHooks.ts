@@ -57,18 +57,27 @@ export default function useInfoHooks({ eventId }: UseInfoHooksParams) {
 
   const handleAddSports = async (values: any) => {
     try {
-      const selectedTeams = values.teams?.map((teamId: any) => {
-        const teamData = teamsOptions.find((team) => team.value === teamId);
-        return teamData ? { teamName: teamData.label, teamCoach: teamData.teamCoach, teamId: teamData.teamId } : null;
-      }).filter(Boolean);
-
-      if (selectedTeams.length !== 8 && (values.bracketType === "Single Elimination" || values.bracketType === "Double Elimination")) {
+      const selectedTeams = values.teams
+        ?.map((teamId: any) => {
+          const teamData = teamsOptions.find((team) => team.value === teamId);
+          return teamData
+            ? {
+                teamName: teamData.label,
+                teamCoach: teamData.teamCoach,
+                teamId: teamData.teamId,
+              }
+            : null;
+        })
+        .filter(Boolean);
+  
+      if (selectedTeams.length < 2 && 
+          (values.bracketType === "Single Elimination" || values.bracketType === "Double Elimination")) {
         notification.error({
-          message:"You must select exactly 8 teams for Single or Double Elimination format."
+          message: "You must select at least 2 teams for Single or Double Elimination format.",
         });
         return;
       }
-
+  
       const formData = new FormData();
       formData.append("eventsId", eventId || "");
       formData.append("bracketType", values.bracketType);
@@ -87,6 +96,7 @@ export default function useInfoHooks({ eventId }: UseInfoHooksParams) {
       message.error("An error occurred while adding sports or teams. Please try again.");
     }
   };
+  
   console.log(events)
 
   return {

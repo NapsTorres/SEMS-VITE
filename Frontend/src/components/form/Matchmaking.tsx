@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { DatePicker, Select, Button, Form } from "antd";
 import moment from "moment";
 import { Team } from "../../types";
@@ -24,19 +24,34 @@ const AdminMatchForm = ({
   const { isLoading, handleGenerateMatchup } = useSportEventHooks({
     sportDetails,
   });
-  const [matches, setMatches] = useState<Match[]>([
-    { id: 1, team1Id: null, team2Id: null, date: null },
-    { id: 2, team1Id: null, team2Id: null, date: null },
-    { id: 3, team1Id: null, team2Id: null, date: null },
-    { id: 4, team1Id: null, team2Id: null, date: null },
-  ]);
 
+  const [matches, setMatches] = useState<Match[]>([]);
+
+  // Dynamically create match slots based on selected teams
+  useEffect(() => {
+    const numberOfMatches = Math.floor(teams.length / 2); // Every 2 teams create 1 match
+    const generatedMatches: Match[] = [];
+
+    for (let i = 0; i < numberOfMatches; i++) {
+      generatedMatches.push({
+        id: i + 1,
+        team1Id: null,
+        team2Id: null,
+        date: null,
+      });
+    }
+
+    setMatches(generatedMatches);
+  }, [teams]);
+
+  // Flatten selected team IDs from all matches
   const selectedTeamIds = matches.reduce<number[]>((acc, match) => {
     if (match.team1Id) acc.push(match.team1Id);
     if (match.team2Id) acc.push(match.team2Id);
     return acc;
   }, []);
 
+  // Handle team changes in the dropdown
   const handleTeamChange = (
     matchId: number,
     teamKey: "team1Id" | "team2Id",
@@ -49,6 +64,7 @@ const AdminMatchForm = ({
     );
   };
 
+  // Handle date changes
   const handleDateChange = (matchId: number, date: moment.Moment | null) => {
     setMatches((prevMatches) =>
       prevMatches.map((match) =>
@@ -62,6 +78,7 @@ const AdminMatchForm = ({
       <Form layout="vertical">
         {matches.map((match) => (
           <div key={match.id} className="grid grid-cols-3 gap-4 mb-4">
+            {/* Team 1 Selection */}
             <Form.Item label={`Match ${match.id} - Team 1`}>
               <Select
                 placeholder="Select Team 1"
@@ -74,8 +91,7 @@ const AdminMatchForm = ({
                   .filter(
                     (team) =>
                       team.teamId !== match.team2Id &&
-                      (!selectedTeamIds.includes(team.teamId) ||
-                        team.teamId === match.team1Id)
+                      !selectedTeamIds.includes(team.teamId)
                   )
                   .map((team) => (
                     <Option key={team.teamId} value={team.teamId}>
@@ -85,6 +101,7 @@ const AdminMatchForm = ({
               </Select>
             </Form.Item>
 
+            {/* Team 2 Selection */}
             <Form.Item label={`Match ${match.id} - Team 2`}>
               <Select
                 placeholder="Select Team 2"
@@ -97,8 +114,7 @@ const AdminMatchForm = ({
                   .filter(
                     (team) =>
                       team.teamId !== match.team1Id &&
-                      (!selectedTeamIds.includes(team.teamId) ||
-                        team.teamId === match.team2Id)
+                      !selectedTeamIds.includes(team.teamId)
                   )
                   .map((team) => (
                     <Option key={team.teamId} value={team.teamId}>
@@ -108,14 +124,15 @@ const AdminMatchForm = ({
               </Select>
             </Form.Item>
 
+            {/* Date Picker */}
             <Form.Item label="Date">
               <DatePicker
-                 showTime={{ use12Hours: true, format: "hh:mm A" }} 
-                 format="DD/MM/YYYY hh:mm A" 
-                 value={match.date}
-                 onChange={(date) => handleDateChange(match.id, date)}
-                 placeholder="dd/mm/yyyy --:-- AM/PM"
-                 className="w-full"
+                showTime={{ use12Hours: true, format: "hh:mm A" }}
+                format="DD/MM/YYYY hh:mm A"
+                value={match.date}
+                onChange={(date) => handleDateChange(match.id, date)}
+                placeholder="dd/mm/yyyy --:-- AM/PM"
+                className="w-full"
               />
             </Form.Item>
           </div>
