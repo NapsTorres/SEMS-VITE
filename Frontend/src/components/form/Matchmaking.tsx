@@ -32,11 +32,22 @@ const AdminMatchForm = ({
     const numberOfMatches = Math.floor(teams.length / 2); // Every 2 teams create 1 match
     const generatedMatches: Match[] = [];
 
+    // Create matches for pairs of teams
     for (let i = 0; i < numberOfMatches; i++) {
       generatedMatches.push({
         id: i + 1,
         team1Id: null,
         team2Id: null,
+        date: null,
+      });
+    }
+
+    // If there's an odd number of teams, create a match with a "free" team
+    if (teams.length % 2 !== 0) {
+      generatedMatches.push({
+        id: numberOfMatches + 1,
+        team1Id: null,
+        team2Id: null, // No opponent for this match, it’s an auto-win for one team
         date: null,
       });
     }
@@ -51,7 +62,6 @@ const AdminMatchForm = ({
     return acc;
   }, []);
 
-  // Handle team changes in the dropdown
   const handleTeamChange = (
     matchId: number,
     teamKey: "team1Id" | "team2Id",
@@ -64,7 +74,6 @@ const AdminMatchForm = ({
     );
   };
 
-  // Handle date changes
   const handleDateChange = (matchId: number, date: moment.Moment | null) => {
     setMatches((prevMatches) =>
       prevMatches.map((match) =>
@@ -78,7 +87,6 @@ const AdminMatchForm = ({
       <Form layout="vertical">
         {matches.map((match) => (
           <div key={match.id} className="grid grid-cols-3 gap-4 mb-4">
-            {/* Team 1 Selection */}
             <Form.Item label={`Match ${match.id} - Team 1`}>
               <Select
                 placeholder="Select Team 1"
@@ -91,7 +99,8 @@ const AdminMatchForm = ({
                   .filter(
                     (team) =>
                       team.teamId !== match.team2Id &&
-                      !selectedTeamIds.includes(team.teamId)
+                      (!selectedTeamIds.includes(team.teamId) ||
+                        team.teamId === match.team1Id)
                   )
                   .map((team) => (
                     <Option key={team.teamId} value={team.teamId}>
@@ -101,7 +110,6 @@ const AdminMatchForm = ({
               </Select>
             </Form.Item>
 
-            {/* Team 2 Selection */}
             <Form.Item label={`Match ${match.id} - Team 2`}>
               <Select
                 placeholder="Select Team 2"
@@ -114,7 +122,8 @@ const AdminMatchForm = ({
                   .filter(
                     (team) =>
                       team.teamId !== match.team1Id &&
-                      !selectedTeamIds.includes(team.teamId)
+                      (!selectedTeamIds.includes(team.teamId) ||
+                        team.teamId === match.team2Id)
                   )
                   .map((team) => (
                     <Option key={team.teamId} value={team.teamId}>
@@ -124,7 +133,6 @@ const AdminMatchForm = ({
               </Select>
             </Form.Item>
 
-            {/* Date Picker */}
             <Form.Item label="Date">
               <DatePicker
                 showTime={{ use12Hours: true, format: "hh:mm A" }}

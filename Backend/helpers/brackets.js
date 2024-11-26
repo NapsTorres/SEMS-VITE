@@ -380,8 +380,7 @@ const generateDoubleEliminationMatches = async (sportEventsId, firstRoundMatches
 };
 
 
-const generateRoundRobinMatches = async (sportEventsId, teams,sportsId) => {
-
+const generateRoundRobinMatches = async (sportEventsId, teams, sportsId) => {
   const bracketQuery =
     "INSERT INTO brackets (sportsId, bracketType, isElimination) VALUES (?, ?, ?)";
   const matchQuery =
@@ -394,28 +393,33 @@ const generateRoundRobinMatches = async (sportEventsId, teams,sportsId) => {
 
   const numTeams = teams.length;
   const numRounds = numTeams - 1;
-  const matchesPerRound = numTeams / 2;
+  const matchesPerRound = Math.floor(numTeams / 2);
 
   let schedule = [];
 
+  // Generate round robin match schedule
   for (let round = 0; round < numRounds; round++) {
     let roundMatches = [];
     for (let match = 0; match < matchesPerRound; match++) {
       const team1Index = (round + match) % (numTeams - 1);
       const team2Index = (numTeams - 1 - match + round) % (numTeams - 1);
 
-      if (match === 0) {
-        roundMatches.push([teams[0].teamId, teams[team2Index + 1].teamId]);
-      } else {
-        roundMatches.push([
-          teams[team1Index + 1].teamId,
-          teams[team2Index + 1].teamId,
-        ]);
+      // Prevent pairing a team with itself
+      let team1Id = teams[team1Index].teamId;
+      let team2Id = teams[team2Index + 1].teamId;
+
+      // If the team1Id and team2Id are the same, skip this round pairing
+      if (team1Id === team2Id) {
+        continue;
       }
+
+      // Add valid match pairing
+      roundMatches.push([team1Id, team2Id]);
     }
     schedule.push(roundMatches);
   }
 
+  // Insert matches into the database
   for (let round = 0; round < numRounds; round++) {
     for (const [team1Id, team2Id] of schedule[round]) {
       await db
@@ -432,6 +436,7 @@ const generateRoundRobinMatches = async (sportEventsId, teams,sportsId) => {
     }
   }
 };
+
 
 const advanceWinnerToNextMatch = async (winnerId, nextMatchId) => {
   try {
