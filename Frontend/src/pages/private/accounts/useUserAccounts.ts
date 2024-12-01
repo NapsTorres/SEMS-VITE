@@ -71,19 +71,19 @@ export default function useUserAccounts() {
 
   const handleFinish = (values: Omit<User, 'id'>) => {
     values.collegeName = teams?.find((v: any) => v.teamId === values.teamId)?.teamName;
-
+  
     const formData = new FormData();
     Object.keys(values).forEach((key) => {
-      if (key !== 'password' || !editingUser) {
+      if (key !== 'password' || (key === 'password' && values[key])) {
         const value = values[key as keyof typeof values];
         formData.append(key, value !== null ? String(value) : '');
       }
     });
-
+  
     if (editingUser) {
       formData.append('id', String(editingUser.id));
     }
-
+  
     const mutation = editingUser ? updateUser : addUser;
     mutation(formData, {
       onSuccess: () => {
@@ -93,6 +93,7 @@ export default function useUserAccounts() {
     });
     closeModal();
   };
+  
 
 
   return {

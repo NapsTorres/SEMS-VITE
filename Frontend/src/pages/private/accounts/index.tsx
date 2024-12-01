@@ -70,8 +70,18 @@ export const UserAccounts: React.FC = () => {
           </Form.Item>
 
           {!editingUser && (
-            <Form.Item name="password" label="Password" rules={[{ required: true, message: 'Please enter a password' }]}>
+            <Form.Item
+              name="password"
+              label="Password"
+              rules={[{ required: true, message: 'Please enter a password' }]}
+            >
               <Input.Password />
+            </Form.Item>
+          )}
+
+          {editingUser && (
+            <Form.Item name="password" label="Password">
+              <Input.Password placeholder="Leave blank to keep the current password" />
             </Form.Item>
           )}
 
