@@ -7,8 +7,8 @@ interface MatchCardProps {
   status: string;
   winnerTeamId: number | null;
   matchId: number;
-  team1Score?: number;  // Add team1Score as an optional property
-  team2Score?: number;  // Add team2Score as an optional property
+  team1Score?: number | null; // Add team1Score as an optional property
+  team2Score?: number | null;  // Add team2Score as an optional property
 }
 
 
