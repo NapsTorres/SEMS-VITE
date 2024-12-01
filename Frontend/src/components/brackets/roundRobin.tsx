@@ -12,18 +12,26 @@ const RoundRobinBracket: React.FC<RoundRobinHooksProps> = ({ matches, teams }) =
 
   return (
     <div className="p-8 font-sans text-gray-800">
-      <h1 className="text-5xl text-center font-bold text-red-600 mb-12">Round Robin Bracket</h1>
+      <h1 className="text-5xl text-center font-bold text-red-600 mb-12">
+        Round Robin Bracket
+      </h1>
       <div className="flex flex-col gap-8">
         {Object.keys(roundsMatch || [])?.map((roundKey) => (
           <div
             key={roundKey}
             className="border-l-8 border-blue-500 p-8 rounded-lg shadow-lg bg-gradient-to-r from-blue-50 via-white to-blue-50"
           >
-            <h2 className="text-3xl font-semibold text-blue-700 mb-6">Round {roundKey}</h2>
+            <h2 className="text-3xl font-semibold text-blue-700 mb-6">
+              Round {roundKey}
+            </h2>
             <div className="grid grid-cols-1 gap-8">
               {roundsMatch[Number(roundKey || [])]?.map((match: any) => {
-                const team1 = teams.find((team: any) => team.teamId === match.team1Id);
-                const team2 = teams.find((team: any) => team.teamId === match.team2Id);
+                const team1 = teams.find(
+                  (team: any) => team.teamId === match.team1Id
+                );
+                const team2 = teams.find(
+                  (team: any) => team.teamId === match.team2Id
+                );
 
                 const statusClass =
                   match.status === "Completed"
@@ -32,13 +40,14 @@ const RoundRobinBracket: React.FC<RoundRobinHooksProps> = ({ matches, teams }) =
                     ? "text-yellow-500"
                     : "text-gray-500";
 
-                // Ensure team scores exist and are numbers
                 const team1Score = match.team1Score ?? null;
                 const team2Score = match.team2Score ?? null;
 
-                // Determine winner if scores are available
+                // Winner is shown only if the match is completed and scores are available
                 const winner =
-                  team1Score !== null && team2Score !== null
+                  match.status === "Completed" &&
+                  team1Score !== null &&
+                  team2Score !== null
                     ? team1Score > team2Score
                       ? team1?.teamName
                       : team2?.teamName
@@ -52,28 +61,44 @@ const RoundRobinBracket: React.FC<RoundRobinHooksProps> = ({ matches, teams }) =
                     <div className="flex items-center gap-6">
                       <div className="flex flex-col items-center">
                         {team1 && team1.teamLogo ? (
-                          <img src={team1.teamLogo} alt={team1.teamName} className="w-20 h-20 rounded-full shadow-lg" />
+                          <img
+                            src={team1.teamLogo}
+                            alt={team1.teamName}
+                            className="w-20 h-20 rounded-full shadow-lg"
+                          />
                         ) : (
                           <div className="w-20 h-20 bg-gray-200 rounded-full flex items-center justify-center shadow-lg">
                             <span className="text-gray-500">N/A</span>
                           </div>
                         )}
-                        <span className="font-semibold text-center mt-2 text-gray-700">{team1?.teamName || "Unknown Team 1"}</span>
+                        <span className="font-semibold text-center mt-2 text-gray-700">
+                          {team1?.teamName || "Unknown Team 1"}
+                        </span>
                       </div>
-                      <span className="text-2xl font-bold text-gray-700">VS</span>
+                      <span className="text-2xl font-bold text-gray-700">
+                        VS
+                      </span>
                       <div className="flex flex-col items-center">
                         {team2 && team2.teamLogo ? (
-                          <img src={team2.teamLogo} alt={team2.teamName} className="w-20 h-20 rounded-full shadow-lg" />
+                          <img
+                            src={team2.teamLogo}
+                            alt={team2.teamName}
+                            className="w-20 h-20 rounded-full shadow-lg"
+                          />
                         ) : (
                           <div className="w-20 h-20 bg-gray-200 rounded-full flex items-center justify-center shadow-lg">
                             <span className="text-gray-500">N/A</span>
                           </div>
                         )}
-                        <span className="font-semibold text-center mt-2 text-gray-700">{team2?.teamName || "Unknown Team 2"}</span>
+                        <span className="font-semibold text-center mt-2 text-gray-700">
+                          {team2?.teamName || "Unknown Team 2"}
+                        </span>
                       </div>
                     </div>
                     <div className="flex flex-col items-end mt-4 md:mt-0">
-                      <span className={`font-semibold ${statusClass} text-lg`}>
+                      <span
+                        className={`font-semibold ${statusClass} text-lg`}
+                      >
                         Status: {match.status || "Pending"}
                       </span>
                       {team1Score !== null && team2Score !== null && (
