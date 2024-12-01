@@ -91,26 +91,23 @@ module.exports = {
   
   updateUser: async (data) => {
     try {
-      const {
-        username,
-        type,
-        teamId,
-        status,
-        id,
-      } = data;
-
+      const { username, type, teamId, status, id, password } = data;
   
-      const query =
-        "UPDATE users SET username = ?, type = ?, teamId = ?, status = ? WHERE id = ?";
-      const params = [
-        username,
-        type,
-        teamId,
-        status,
-        id,
-      ];
+      // Base query and params
+      let query = "UPDATE users SET username = ?, type = ?, teamId = ?, status = ?";
+      let params = [username, type, teamId, status];
+  
+      // If a new password is provided, hash and add it to the query and params
+      if (password && password.trim()) {
+        const hashedPassword = await hashPassword(password);
+        query += ", password = ?";
+        params.push(hashedPassword);
+      }
+  
+      query += " WHERE id = ?";
+      params.push(id);
+  
       const result = await queryAsync(query, params);
-
   
       if (result.affectedRows === 0) {
         return { success: 0, message: "User not found or no changes made" };
@@ -121,6 +118,8 @@ module.exports = {
       return { success: 0, message: error.message };
     }
   },
+  
+  
   
   coachHandle: async (coachId) => {
     try {
