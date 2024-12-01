@@ -19,7 +19,7 @@ const SportEventInformation: React.FC<SportEventInformationProps> = ({
 
   const showModal = () => setIsModalVisible(true);
   const handleCloseModal = () => setIsModalVisible(false);
-  const handleBack = () => navigate(-1);
+  const handleBack = () => navigate(-0);
   console.log(sportDetails)
   return (  
     <div className="p-6 mt-4 mx-auto">

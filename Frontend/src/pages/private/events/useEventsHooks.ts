@@ -9,7 +9,7 @@ import { Events } from "../../../types";
 import dayjs from "dayjs";
 
 export default function useEventsHooks() {
-  const queryClient = useQueryClient();
+  const queryClient = useQueryClient(); 
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [editingEvents, setEditingEvents] = useState<Events | null>(null);
   const [form] = Form.useForm();
@@ -19,45 +19,28 @@ export default function useEventsHooks() {
     });
   const { data: Events, isLoading: isFetchingEvents } = useFetchData(
     ["Events"],
-    [() => EventsServices.fetchEvents()]
+    [
+      () => EventsServices.fetchEvents(),
+    ]
   );
-
   const handleAddOrEditEvent = (values: Events) => {
     const formData = new FormData();
     formData.append("eventName", values.eventName);
     formData.append("description", values.description);
-    formData.append("eventYear", new Date().getFullYear().toString());
-
-    // Adjust dates to UTC to avoid timezone shifts
-    const startDateUTC = new Date(
-      Date.UTC(
-        values.eventstartDate.year(),
-        values.eventstartDate.month(),
-        values.eventstartDate.date()
-      )
-    );
-    const endDateUTC = new Date(
-      Date.UTC(
-        values.eventendDate.year(),
-        values.eventendDate.month(),
-        values.eventendDate.date()
-      )
-    );
-
-    formData.append("eventstartDate", startDateUTC.toISOString());
-    formData.append("eventendDate", endDateUTC.toISOString());
-
-    if (editingEvents) {
-      formData.append("eventId", editingEvents.eventId.toString());
+    formData.append("eventYear", new Date().getFullYear.toString());
+    formData.append("eventstartDate", new Date(values.eventstartDate).toISOString());
+    formData.append("eventendDate", new Date(values.eventendDate).toISOString());
+    if(editingEvents){
+        formData.append("eventId", editingEvents.eventId.toString());
     }
-
     const mutation = editingEvents ? editEventsMutation : addEventsMutation;
     mutation(formData, {
       onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: ["Events"] });
-        form.resetFields();
-      },
+        queryClient.invalidateQueries({ queryKey: ["Events"] })
+        form.resetFields()
+      },                
     });
+ 
   };
 
   const handleDeleteEvents = (eventId: any) => {
@@ -69,9 +52,8 @@ export default function useEventsHooks() {
   const showModal = (team: Events | null = null) => {
     setEditingEvents(team);
     if (team) {
-      // Adjust initial values to match dayjs for form handling
-      team.eventendDate = dayjs.utc(team.eventendDate);
-      team.eventstartDate = dayjs.utc(team.eventstartDate);
+      team.eventendDate = dayjs(team.eventendDate)
+      team.eventstartDate = dayjs(team.eventstartDate)
       form.setFieldsValue(team);
     } else {
       form.resetFields();
