@@ -45,6 +45,8 @@ export interface BracketType {
 }
 
 export interface Match {
+  team1Score: number | null;
+  team2Score: number | null;
   bracketType: string;
   matchId: number;
   round: number;
@@ -55,10 +57,7 @@ export interface Match {
   status: string;
   winner_team_id: number | null;
   isFinal?: boolean;
-  team1Score?: number;  // Score for team 1
-  team2Score?: number;  // Score for team 2
 }
-
 
 export interface SingleEliminationBracketProps {
   matches: Match[];
