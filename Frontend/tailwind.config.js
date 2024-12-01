@@ -2,7 +2,7 @@
 module.exports = {
   content: [
     './index.html',
-    './src/**/*.{js,ts,jsx,tsx}',
+    './src/**/*.{js,ts,jsx,tsx}', // This should be sufficient and well-scoped
   ],
   theme: {
     extend: {
@@ -14,4 +14,4 @@ module.exports = {
     },
   },
   plugins: [],
-}
+};
