@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useEffect } from "react";
 import { DatePicker, Select, Button, Form } from "antd";
 import moment from "moment";
@@ -25,37 +24,23 @@ const AdminMatchForm = ({
     sportDetails,
   });
 
-  const [matches, setMatches] = useState<Match[]>([]);
+  // Dynamically determine the number of matches needed
+  const calculateInitialMatches = (teams: Team[]): Match[] => {
+    const matchCount = Math.ceil(teams.length / 2);
+    return Array.from({ length: matchCount }, (_, i) => ({
+      id: i + 1,
+      team1Id: null,
+      team2Id: null,
+      date: null,
+    }));
+  };
 
-  // Dynamically create match slots based on selected teams
+  const [matches, setMatches] = useState<Match[]>(calculateInitialMatches(teams));
+
   useEffect(() => {
-    const numberOfMatches = Math.floor(teams.length / 2); // Every 2 teams create 1 match
-    const generatedMatches: Match[] = [];
-
-    // Create matches for pairs of teams
-    for (let i = 0; i < numberOfMatches; i++) {
-      generatedMatches.push({
-        id: i + 1,
-        team1Id: null,
-        team2Id: null,
-        date: null,
-      });
-    }
-
-    // If there's an odd number of teams, create a match with a "free" team
-    if (teams.length % 2 !== 0) {
-      generatedMatches.push({
-        id: numberOfMatches + 1,
-        team1Id: null,
-        team2Id: null, // No opponent for this match, it’s an auto-win for one team
-        date: null,
-      });
-    }
-
-    setMatches(generatedMatches);
+    setMatches(calculateInitialMatches(teams));
   }, [teams]);
 
-  // Flatten selected team IDs from all matches
   const selectedTeamIds = matches.reduce<number[]>((acc, match) => {
     if (match.team1Id) acc.push(match.team1Id);
     if (match.team2Id) acc.push(match.team2Id);
