@@ -1,6 +1,5 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Link } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button, Pagination, Select, Spin } from "antd";
 import useGameScorig from "./useGameScoring";
 
@@ -11,39 +10,44 @@ export const GameScoring = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [matchesPerPage] = useState(6);
 
-  // State for filters
-  const [statusFilter, setStatusFilter] = useState("all");
-  const [roundFilter, setRoundFilter] = useState("all");
-  const [eventFilter, setEventFilter] = useState("all");
-  const [sportFilter, setSportFilter] = useState("all");
+  const getInitialFilter = (key: string, defaultValue: string) => {
+    return localStorage.getItem(key) || defaultValue;
+  };
 
-  // Helper function for status background and text color
-  const getStatusStyles = (status: string) => {
+  const [statusFilter, setStatusFilter] = useState(getInitialFilter("statusFilter", "all"));
+  const [roundFilter, setRoundFilter] = useState(getInitialFilter("roundFilter", "all"));
+  const [eventFilter, setEventFilter] = useState(getInitialFilter("eventFilter", "all"));
+  const [sportFilter, setSportFilter] = useState(getInitialFilter("sportFilter", "all"));
+
+  useEffect(() => {
+    localStorage.setItem("statusFilter", statusFilter);
+  }, [statusFilter]);
+
+  useEffect(() => {
+    localStorage.setItem("roundFilter", roundFilter);
+  }, [roundFilter]);
+
+  useEffect(() => {
+    localStorage.setItem("eventFilter", eventFilter);
+  }, [eventFilter]);
+
+  useEffect(() => {
+    localStorage.setItem("sportFilter", sportFilter);
+  }, [sportFilter]);
+
+  const getStatusBackground = (status: string) => {
     switch (status) {
       case "pending":
-        return {
-          bgColor: "bg-yellow-200", // Background color for pending status
-          textColor: "text-yellow-700", // Text color for pending status
-        };
+        return "bg-gradient-to-r from-yellow-200 to-yellow-400";
       case "ongoing":
-        return {
-          bgColor: "bg-orange-300", // Background color for ongoing status
-          textColor: "text-orange-700", // Text color for ongoing status
-        };
+        return "bg-gradient-to-r from-orange-300 to-orange-500";
       case "completed":
-        return {
-          bgColor: "bg-green-300", // Background color for completed status
-          textColor: "text-green-700", // Text color for completed status
-        };
+        return "bg-gradient-to-r from-green-300 to-green-500";
       default:
-        return {
-          bgColor: "bg-gray-200", // Background color for default status
-          textColor: "text-gray-700", // Text color for default status
-        };
+        return "bg-gradient-to-r from-yellow-200 to-yellow-400";
     }
   };
 
-  // Filter matches based on selected criteria
   const filteredMatches = Match?.filter((match: any) => {
     const hasSched = match.schedule !== "" && match.schedule !== null;
     const statusMatches = statusFilter === "all" || match.status === statusFilter;
@@ -54,42 +58,27 @@ export const GameScoring = () => {
     return statusMatches && roundMatches && eventMatches && sportMatches && hasSched;
   });
 
-  // Extract unique Event Names and Sport Names
   const uniqueEvents = [
-    ...new Map(
-      Match?.map((match: any) => [match.event.eventId, match.event.eventName])
-    ).values(),
+    ...new Map(Match?.map((match: any) => [match.event.eventId, match.event.eventName])).values(),
   ];
   const uniqueSports = [
-    ...new Map(
-      Match?.map((match: any) => [match.sport.sportsId, match.sport.sportsName])
-    ).values(),
+    ...new Map(Match?.map((match: any) => [match.sport.sportsId, match.sport.sportsName])).values(),
   ];
 
-  const handlePageChange = (page: number) => {
-    setCurrentPage(page);
+  const handlePageChange = (page: number) => setCurrentPage(page);
+
+  const getWinner = (team1Score: number, team2Score: number, team1: any, team2: any, status: string) => {
+    if (team1Score > team2Score) return team1?.teamName || "Team 1";
+    if (team2Score > team1Score) return team2?.teamName || "Team 2";
+    if (team1Score === team2Score) {
+      return status === "completed" ? "Draw" : "Not Declared";
+    }
+    return "Not Declared";
   };
 
   if (isFetchingMatch) {
     return <Spin size="large" />;
   }
-
-  // Function to determine the winner
-  const getWinner = (team1Score: number, team2Score: number, team1: any, team2: any, status: string) => {
-    if (team1Score > team2Score) return team1?.teamName || "Team 1";
-    if (team2Score > team1Score) return team2?.teamName || "Team 2";
-
-    // If scores are equal, check the match status
-    if (team1Score === team2Score) {
-      if (status === "completed") {
-        return "Draw"; // Draw if the status is 'completed'
-      } else {
-        return "Not Declared"; // Not declared if the match is not completed
-      }
-    }
-
-    return "Not Declared"; // Default case if no condition matches
-  };
 
   return (
     <div className="p-5">
@@ -97,7 +86,6 @@ export const GameScoring = () => {
 
       {/* Filters */}
       <div className="flex flex-wrap gap-4 mb-4">
-        {/* Status Filter */}
         <Select
           value={statusFilter}
           onChange={(value) => setStatusFilter(value)}
@@ -110,7 +98,6 @@ export const GameScoring = () => {
           <Option value="completed">Completed</Option>
         </Select>
 
-        {/* Round Filter */}
         <Select
           value={roundFilter}
           onChange={(value) => setRoundFilter(value)}
@@ -125,7 +112,6 @@ export const GameScoring = () => {
           ))}
         </Select>
 
-        {/* Event Filter */}
         <Select
           value={eventFilter}
           onChange={(value) => setEventFilter(value)}
@@ -140,7 +126,6 @@ export const GameScoring = () => {
           ))}
         </Select>
 
-        {/* Sport Filter */}
         <Select
           value={sportFilter}
           onChange={(value) => setSportFilter(value)}
@@ -163,16 +148,16 @@ export const GameScoring = () => {
           const team2 = match.team2;
           const team1Score = match.team1Score || 0;
           const team2Score = match.team2Score || 0;
-          const winner = getWinner(team1Score, team2Score, team1, team2, match.status); // Pass match.status here
+          const winner = getWinner(team1Score, team2Score, team1, team2, match.status);
           const eventAndSport = `${match.event?.eventName || "Unknown Event"} - ${match.sport?.sportsName || "Unknown Sport"}`;
-          const { textColor } = getStatusStyles(match.status);
+          const statusBackground = getStatusBackground(match.status);
 
           return (
             <div
               key={match.matchId}
-              className={`bg-white p-4 rounded-lg grid h-[400px] grid-rows-6 shadow-[rgba(0,_0,_0,_0.24)_0px_3px_8px] border-2 border-black`}
+              className={`p-4 rounded-lg grid h-max grid-rows-6 shadow-md ${statusBackground}`}
             >
-              <h2 className="text-lg row-span-1 font-semibold text-center text-blue-700 mb-2">
+              <h2 className="text-lg row-span-1 font-semibold text-center mb-4">
                 {eventAndSport}
               </h2>
               <h2 className="text-lg row-span-1 font-semibold text-center mb-4">
@@ -191,7 +176,7 @@ export const GameScoring = () => {
                     className="w-16 h-16 rounded-full shadow-md"
                   />
                   <p className="font-semibold text-center mt-2">{team1?.teamName || "Team 1"}</p>
-                  <p className="text-lg">{team1Score}</p>
+                  <p className="text-center font-bold">Score: {team1Score}</p>
                 </div>
                 <p className="text-xl font-bold mx-2">VS</p>
                 <div className="flex flex-col items-center mx-4">
@@ -201,21 +186,15 @@ export const GameScoring = () => {
                     className="w-16 h-16 rounded-full shadow-md"
                   />
                   <p className="font-semibold text-center mt-2">{team2?.teamName || "Team 2"}</p>
-                  <p className="text-lg">{team2Score}</p>
+                  <p className="text-center font-bold">Score: {team2Score}</p>
                 </div>
               </div>
               <div className="row-span-1 text-center mb-4">
-                <p className={`${textColor} p-1 rounded-lg inline-block`}>
-                  <strong>Status:</strong> {match.status || "Pending"}
-                </p>
-                <p>
-                  <strong>Scheduled:</strong> {new Date(match.schedule).toLocaleString()}
-                </p>
+                <p><strong>Status:</strong> {match.status || "Pending"}</p>
+                <p><strong>Scheduled:</strong> {new Date(match.schedule).toLocaleString()}</p>
               </div>
               <Link className="row-span-1" to={`match/${match.matchId}`}>
-                <Button type="primary" block>
-                  View Details
-                </Button>
+                <Button type="primary" block>Update Match</Button>
               </Link>
             </div>
           );
