@@ -44,23 +44,14 @@ export default function useGameRequest({ setIsModalVisible }: UseSportsRequestPr
   };
 
   const { mutate: incrementScoring } = createMutation(
-    GamesServices.scoreIncrement,
-    "Score incremented successfully"
+    GamesServices.scoreIncrement
   );
-
-  const { mutate: decrementScoring } = createMutation(
-    GamesServices.scoreDecrement, // Assuming GamesServices.scoreDecrement is defined
-    "Score decremented successfully"
-  );
-
   const { mutate: changingStatus } = createMutation(
-    GamesServices.gameStatus,
-    "Game status updated successfully"
+    GamesServices.gameStatus
   );
 
   return {
     incrementScoring,
-    decrementScoring, // Expose the decrementScoring function
-    changingStatus,
+    changingStatus
   };
 }
