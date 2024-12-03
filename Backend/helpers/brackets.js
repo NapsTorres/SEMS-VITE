@@ -627,20 +627,20 @@ async function checkForChampion(winnerTeamId, loserTeamId, match) {
   return null; 
 }
 
-const updateTeamStanding = async (winnerTeamId, loserTeamId) => {
+const updateTeamStanding = async (winnerTeamId, loserTeamId,sportEventId) => {
   try {
     await db
     .promise()
     .query(
-      "UPDATE teams_events SET teamWin = teamWin + 1 WHERE teamId = ?",
-      [winnerTeamId]
+      "UPDATE teams_events SET teamWin = teamWin + 1 WHERE teamId = ? and sportEventsId = ?",
+      [winnerTeamId,sportEventId]
     );
 
     await db
     .promise()
     .query(
-      "UPDATE teams_events SET teamLose = teamLose + 1 WHERE teamId = ?",
-      [loserTeamId]
+      "UPDATE teams_events SET teamLose = teamLose + 1 WHERE teamId = ? and sportEventsId = ?",
+      [loserTeamId,sportEventId]
     );
   } catch (error) {
     console.error("Error updating team standings:", error);
