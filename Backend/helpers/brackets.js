@@ -117,7 +117,7 @@ const generateSingleEliminationMatches = async (
   }
 };
 
-const generateDoubleEliminationMatches = async (sportEventsId, firstRoundMatches, sportsId) => {
+const generateDoubleEliminationMatches = async (sportEventsId, firstRoundMatches,sportsId) => {
   const bracketQuery =
     "INSERT INTO brackets (sportsId, bracketType, isElimination) VALUES (?, ?, ?)";
   const matchQuery =
@@ -139,7 +139,6 @@ const generateDoubleEliminationMatches = async (sportEventsId, firstRoundMatches
 
   let currentWinnerRoundMatchIds = [];
 
-  // Insert first round matches for the winner bracket
   for (const match of firstRoundMatches) {
     const { team1Id, team2Id, date } = match;
     const [matchResult] = await db
@@ -163,7 +162,6 @@ const generateDoubleEliminationMatches = async (sportEventsId, firstRoundMatches
   const nextWinnerRoundMatchIds = [];
   const loserRound1MatchIds = [];
 
-  // Insert second round matches for the winner bracket and loser bracket
   for (let i = 0; i < currentWinnerRoundMatchIds.length; i += 2) {
     const team1MatchId = currentWinnerRoundMatchIds[i];
     const team2MatchId = currentWinnerRoundMatchIds[i + 1];
@@ -186,7 +184,6 @@ const generateDoubleEliminationMatches = async (sportEventsId, firstRoundMatches
     const nextMatchId = nextMatchResult.insertId;
     nextWinnerRoundMatchIds.push(nextMatchId);
 
-    // Update the winner bracket to point to the next match
     await db
       .promise()
       .query("UPDATE matches SET next_match_id = ? WHERE matchId = ?", [
@@ -200,7 +197,6 @@ const generateDoubleEliminationMatches = async (sportEventsId, firstRoundMatches
         team2MatchId,
       ]);
 
-    // Insert loser bracket matches
     const [loserMatchResult] = await db
       .promise()
       .query(matchQuery, [
@@ -219,7 +215,6 @@ const generateDoubleEliminationMatches = async (sportEventsId, firstRoundMatches
     const loserMatchId = loserMatchResult.insertId;
     loserRound1MatchIds.push(loserMatchId);
 
-    // Set loser next match links
     await db
       .promise()
       .query("UPDATE matches SET loser_next_match_id = ? WHERE matchId = ?", [
@@ -236,7 +231,6 @@ const generateDoubleEliminationMatches = async (sportEventsId, firstRoundMatches
 
   currentWinnerRoundMatchIds = nextWinnerRoundMatchIds;
 
-  // Insert final winner bracket match
   const [finalWinnerMatchResult] = await db
     .promise()
     .query(matchQuery, [
@@ -262,12 +256,9 @@ const generateDoubleEliminationMatches = async (sportEventsId, firstRoundMatches
         matchId,
       ]);
   }
-
-  // Insert second round loser bracket matches and reverse the order for pairing
-  const reversedLoserMatchIds = loserRound1MatchIds.reverse();
   const loserRound2MatchIds = [];
 
-  for (let i = 0; i < currentWinnerRoundMatchIds.length; i++) {
+  for (let i = 0; i < loserRound1MatchIds.length; i++) {
     const [loserMatchResult] = await db
       .promise()
       .query(matchQuery, [
@@ -286,23 +277,21 @@ const generateDoubleEliminationMatches = async (sportEventsId, firstRoundMatches
     const loserRound2MatchId = loserMatchResult.insertId;
     loserRound2MatchIds.push(loserRound2MatchId);
 
-    // Update loser and winner matches for the second round
     await db
       .promise()
       .query("UPDATE matches SET next_match_id = ? WHERE matchId = ?", [
         loserRound2MatchId,
-        reversedLoserMatchIds[i], // Reverse pairing
+        loserRound1MatchIds[i],
       ]);
 
     await db
       .promise()
       .query("UPDATE matches SET loser_next_match_id = ? WHERE matchId = ?", [
         loserRound2MatchId,
-        currentWinnerRoundMatchIds[i], // Pair with winner match
+        currentWinnerRoundMatchIds[i],
       ]);
   }
 
-  // Insert third round loser bracket match
   const [loserRound3MatchResult] = await db
     .promise()
     .query(matchQuery, [
@@ -329,7 +318,6 @@ const generateDoubleEliminationMatches = async (sportEventsId, firstRoundMatches
       ]);
   }
 
-  // Insert fourth round loser bracket match
   const [loserRound4MatchResult] = await db
     .promise()
     .query(matchQuery, [
@@ -360,9 +348,7 @@ const generateDoubleEliminationMatches = async (sportEventsId, firstRoundMatches
       loserRound4MatchId,
       finalWinnerMatchId,
     ]);
-
-  // Insert first final match
-  const [firstFinalMatchResult] = await db
+    const [firstFinalMatchResult] = await db
     .promise()
     .query(matchQuery, [
       sportEventsId,
@@ -391,8 +377,7 @@ const generateDoubleEliminationMatches = async (sportEventsId, firstRoundMatches
       firstFinalMatchId,
       loserRound4MatchId, 
     ]);
-
-  // Insert reset match for final rematch bracket
+  
   const [resetMatchResult] = await db
     .promise()
     .query(matchQuery, [
