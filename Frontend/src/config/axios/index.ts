@@ -6,6 +6,7 @@ const axiosInstance = axios.create({
     'X-Requested-With': 'XMLHttpRequest',
     'Content-Type': 'multipart/form-data',
   },
+  withCredentials: true, // This ensures cookies are sent
 });
 
 export default axiosInstance;

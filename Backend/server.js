@@ -8,12 +8,21 @@ var bodyparser = require("body-parser");
 const { userRouter, teamsRouter, eventsRouter, sportsRouter, gameRouter, mediaRouter } = require("./router/main.router.js");
 
 const corsOptions = {
-    origin: ['http://localhost:5173','http://localhost:5174','http://localhost:5175','ncf-sems.vercel.app','https://ncf-sems-napoleons-projects.vercel.app'], 
-    credentials: true,
-    optionsSuccessStatus: 200,
-  };
-  
-  app.use(cors(corsOptions));
+  origin: [
+    'http://localhost:5173', 
+    'http://localhost:5174',
+    'http://localhost:5175',
+    'https://ncf-sems.vercel.app',
+    'https://ncf-sems-napoleons-projects.vercel.app'
+  ],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'], // Ensure OPTIONS is allowed
+  allowedHeaders: ['Content-Type', 'Authorization'],  // You can include more headers if needed
+  optionsSuccessStatus: 200
+};
+
+app.use(cors(corsOptions));
+
 
   httpServer.listen(process.env.APP_PORT || 3006, () => {
     console.log(`Listening to the Port: ${httpServer.address().port}`);
