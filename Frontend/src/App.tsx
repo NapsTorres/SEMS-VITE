@@ -4,7 +4,9 @@ import { RouterUrl } from "./routes";
 import { CoachSide, Private, Public } from "./layout";
 import {
   AdminDashboard,
+  // CoachDashboard,
   CoachTeamPage,
+  // CoachTeamStanding,
   EventsPage,
   GameResults,
   GameSchedule,
@@ -25,25 +27,26 @@ import LiveMatch from "./pages/public/live";
 function App() {
   const router = createBrowserRouter([
     {
-      path: "/", // Root path for public routes
+      path: RouterUrl.LandingPage,
       element: <Public />,
       children: [
-        { path: "/", element: <LandingPage /> }, // Landing page route
-        { path: RouterUrl.Login, element: <LoginPage /> }, // Login page route
+        { path: RouterUrl.LandingPage, element: <LandingPage /> },
+        { path: RouterUrl.Login, element: <LoginPage /> },
         { path: RouterUrl.Registration, element: <RegistrationPage /> },
         { path: RouterUrl.Live, element: <LiveMatch /> },
       ],
     },
     {
-      path: "/coach", // Path for coach-specific routes
+      path: RouterUrl.LandingPage,
       element: <CoachSide />,
       children: [
         { path: RouterUrl.Coach, element: <CoachTeamPage /> },
-        // Add more coach routes here
+        // { path: RouterUrl.CoachStanding, element: <CoachTeamStanding /> },
+        // { path: RouterUrl.CoachTeam, element: <CoachTeamPage /> },
       ],
     },
     {
-      path: "/admin", // Path for admin-specific routes
+      path: RouterUrl.LandingPage,
       element: <Private />,
       children: [
         { path: RouterUrl.AdminDashboard, element: <AdminDashboard /> },
