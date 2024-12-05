@@ -8,7 +8,7 @@ var bodyparser = require("body-parser");
 const { userRouter, teamsRouter, eventsRouter, sportsRouter, gameRouter, mediaRouter } = require("./router/main.router.js");
 
 const corsOptions = {
-    origin: ['http://localhost:5173','http://localhost:5174','http://localhost:5175'], 
+    origin: ['http://localhost:5173','http://localhost:5174','http://localhost:5175','ncf-sems.vercel.app','https://ncf-sems-napoleons-projects.vercel.app'], 
     credentials: true,
     optionsSuccessStatus: 200,
   };
