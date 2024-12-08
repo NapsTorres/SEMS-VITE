@@ -10,27 +10,12 @@
   padding: 20px;
 }
 
-.bracket-grid-winners {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  grid-gap: 2rem;
-  position: relative;
-}
-
-.bracket-grid-losers {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  grid-gap: 1.5rem;
-}
-
-
 /* Each round column */
 .round-column {
-  position: relative;
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  gap: 3rem;
+  align-items: center;
+  gap: 24px; /* Add space between match cards */
 }
 
 /* Title for each round */
@@ -38,7 +23,7 @@
   font-weight: bold;
   font-size: 1.2em;
   margin-bottom: 10px;
-  text-align: left;
+  text-align: center;
 }
 
 /* Match card styling */
@@ -117,9 +102,9 @@
   display: block;
 }
 
+/* Custom CSS for Double Elimination Bracket */
 .double-elimination-container {
   max-width: 1200px;
-  margin: auto;
 }
 
 /* Winners and Losers Bracket layout */
@@ -143,10 +128,6 @@
   margin-top: 40px;
   text-align: center;
   place-items: center;
-}
-
-.final-column, .final-rematch-column {
-  margin-right: 20px; /* Adds space between the cards */
 }
 
 .blur-bg {
