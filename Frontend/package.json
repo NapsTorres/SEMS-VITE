@@ -10,15 +10,18 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@g-loot/react-tournament-brackets": "^1.0.31-rc",
     "@tanstack/react-query": "^5.59.16",
     "antd": "^5.21.5",
     "axios": "^1.7.7",
     "clsx": "^2.1.1",
     "dayjs": "^1.11.13",
     "framer-motion": "^11.11.17",
+    "jwt-decode": "^4.0.0",
     "lodash": "^4.17.21",
     "moment": "^2.30.1",
     "react": "^18.3.1",
+    "react-bracket": "^0.0.4",
     "react-clamp-lines": "^3.0.3",
     "react-dom": "^18.3.1",
     "react-fast-marquee": "^1.6.5",
