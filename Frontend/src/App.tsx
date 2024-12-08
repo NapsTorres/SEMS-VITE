@@ -4,7 +4,9 @@ import { RouterUrl } from "./routes";
 import { CoachSide, Private, Public } from "./layout";
 import {
   AdminDashboard,
+  // CoachDashboard,
   CoachTeamPage,
+  // CoachTeamStanding,
   EventsPage,
   GameResults,
   GameSchedule,
@@ -39,6 +41,8 @@ function App() {
       element: <CoachSide />,
       children: [
         { path: RouterUrl.Coach, element: <CoachTeamPage /> },
+        // { path: RouterUrl.CoachStanding, element: <CoachTeamStanding /> },
+        // { path: RouterUrl.CoachTeam, element: <CoachTeamPage /> },
       ],
     },
     {
@@ -62,7 +66,9 @@ function App() {
   ]);
 
   return (
-    <RouterProvider router={router} fallbackElement={<h6>Loading...</h6>} />
+    <>
+      <RouterProvider router={router} fallbackElement={<h6>Loading...</h6>} />
+    </>
   );
 }
 

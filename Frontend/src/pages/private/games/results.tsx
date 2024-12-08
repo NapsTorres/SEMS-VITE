@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import useGameResults from "./useGameResults";
 
 export const GameResults = () => {

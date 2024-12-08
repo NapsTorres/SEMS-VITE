@@ -1,12 +1,11 @@
 import axios from 'axios';
 
 const axiosInstance = axios.create({
-  baseURL: 'https://ncf-sems.onrender.com/api',  // Make sure this matches your API URL
+  baseURL: 'http://localhost:3006/api',
   headers: {
-    'X-Requested-With': 'XMLHttpRequest',  // For CORS requests
+    'X-Requested-With': 'XMLHttpRequest',
     'Content-Type': 'multipart/form-data',
   },
-  withCredentials: true,  // Ensure cookies are included in the requests
 });
 
 export default axiosInstance;
