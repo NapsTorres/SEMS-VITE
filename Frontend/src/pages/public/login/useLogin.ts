@@ -21,6 +21,7 @@ export default function useLogin() {
           return
         }
         const info = data.data.results
+        localStorage.setItem('accessToken',data.data.token)
         saveAdminInfo(info); 
         navigate(data.data.navigate); 
       },

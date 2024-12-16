@@ -8,10 +8,13 @@ import { Form } from 'antd';
 import { useQueryClient } from '@tanstack/react-query';
 import EventsServices from '../../../config/service/events';
 import TeamsServices from '../../../config/service/teams';
+import useStore from '../../../zustand/store/store';
+import { selector } from '../../../zustand/store/store.provider';
 
 export default function useUserAccounts() {
   const [form] = Form.useForm();
   const queryClient = useQueryClient();
+  const admin = useStore(selector('admin'))
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [selectedEvent, setSelectedEvent] = useState<string | null>(null);
@@ -82,6 +85,8 @@ export default function useUserAccounts() {
   
     if (editingUser) {
       formData.append('id', String(editingUser.id));
+    } else {
+      formData.append("addedBy",admin.info.id)
     }
   
     const mutation = editingUser ? updateUser : addUser;

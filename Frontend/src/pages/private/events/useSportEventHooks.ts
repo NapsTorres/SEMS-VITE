@@ -4,6 +4,7 @@ import { useFetchData } from '../../../config/axios/requestData';
 import useEventsRequest from '../../../config/data/events';
 import EventsServices from '../../../config/service/events';
 import { Team } from '../../../types';
+import { useState } from 'react';
 
 export interface SportEventInformationProps {
     sportDetails: {
@@ -20,6 +21,7 @@ export interface SportEventInformationProps {
   }
 export default function useSportEventHooks({sportDetails}:SportEventInformationProps) {
     const queryClient = useQueryClient();
+    const [isModalVisible, setIsModalVisible] = useState(false);
     const sportEventsId = sportDetails.sportEventsId
     const { data: [matches] = [] } = useFetchData(
         ["matches"],
@@ -27,9 +29,8 @@ export default function useSportEventHooks({sportDetails}:SportEventInformationP
           () => EventsServices.bracketMatch(sportEventsId)
         ]
       );
-      console.log(matches)
     const { createMatchMaking, isLoading } = useEventsRequest({});
-    console.log(sportDetails)
+
     const handleGenerateMatchup = async(values:any) =>{
         if(sportDetails.bracketType !== 'Round Robin'){
           values = values?.map((v:any) =>({
@@ -45,12 +46,18 @@ export default function useSportEventHooks({sportDetails}:SportEventInformationP
         createMatchMaking(formData, {
             onSuccess: () => {
                 queryClient.invalidateQueries({ queryKey: ["matches"] });
+                setIsModalVisible(false);
             },
           });
       }
+      const showModal = () => setIsModalVisible(true);
+      const handleCloseModal = () => setIsModalVisible(false);
   return {
     isLoading,
     matches,
-    handleGenerateMatchup
+    isModalVisible,
+    handleGenerateMatchup,
+    showModal,
+    handleCloseModal
   }
 }

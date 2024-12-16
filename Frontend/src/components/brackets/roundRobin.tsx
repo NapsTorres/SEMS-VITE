@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React from "react";
 import { Match, RoundRobinHooksProps } from "../../types";
 import { dateStringFormatter } from "../../utility/utils";
@@ -11,15 +12,17 @@ const RoundRobinBracket: React.FC<RoundRobinHooksProps> = ({ matches, teams }) =
   }, {} as Record<number, Match[]>);
 
   return (
-    <div className="p-8 font-sans text-gray-800">
+    <div className="p-8 font-sans text-gray-800 z-50">
       <h1 className="text-5xl text-center font-bold text-red-600 mb-12">
         Round Robin Bracket
       </h1>
       <div className="flex flex-col gap-8">
-        {Object.keys(roundsMatch || [])?.map((roundKey) => (
+        {Object.keys(roundsMatch || [])?.map((roundKey) =>{ 
+          console.log(roundKey)
+          return(
           <div
             key={roundKey}
-            className="border-l-8 border-blue-500 p-8 rounded-lg shadow-lg bg-gradient-to-r from-blue-50 via-white to-blue-50"
+            className="border-l-8 z-50 border-blue-500 p-8 rounded-lg shadow-lg bg-gradient-to-r from-blue-50 via-white to-blue-50"
           >
             <h2 className="text-3xl font-semibold text-blue-700 mb-6">
               Round {roundKey}
@@ -32,7 +35,6 @@ const RoundRobinBracket: React.FC<RoundRobinHooksProps> = ({ matches, teams }) =
                 const team2 = teams.find(
                   (team: any) => team.teamId === match.team2Id
                 );
-
                 const statusClass =
                   match.status === "Completed"
                     ? "text-green-500"
@@ -43,7 +45,6 @@ const RoundRobinBracket: React.FC<RoundRobinHooksProps> = ({ matches, teams }) =
                 const team1Score = match.team1Score ?? null;
                 const team2Score = match.team2Score ?? null;
 
-                // Winner is shown only if the match is completed and scores are available
                 const winner =
                   match.status === "Completed" &&
                   team1Score !== null &&
@@ -56,7 +57,7 @@ const RoundRobinBracket: React.FC<RoundRobinHooksProps> = ({ matches, teams }) =
                 return (
                   <div
                     key={match.matchId}
-                    className="flex flex-col md:flex-row justify-between items-center bg-white p-6 rounded-xl shadow-xl border transform hover:scale-105 transition-transform duration-300"
+                    className="flex flex-col md:flex-row justify-between items-center  p-6 rounded-xl shadow-xl border transform hover:scale-105 transition-transform duration-300"
                   >
                     <div className="flex items-center gap-6">
                       <div className="flex flex-col items-center">
@@ -122,7 +123,7 @@ const RoundRobinBracket: React.FC<RoundRobinHooksProps> = ({ matches, teams }) =
               })}
             </div>
           </div>
-        ))}
+        )})}
       </div>
     </div>
   );

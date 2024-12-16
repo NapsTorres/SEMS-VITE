@@ -67,6 +67,22 @@ export const TeamsPage: React.FC = () => {
       ),
     },
     {
+      title: "Added by",
+      dataIndex: "addedByName",
+      key: "addedByName",
+      render: (coachName: string) => (
+        <span className="text-gray-800 font-semibold">{coachName}</span>
+      ),
+    },
+    {
+      title: "Updated by",
+      dataIndex: "updatedByName",
+      key: "updatedByName",
+      render: (coachName: string) => (
+        <span className="text-gray-800 font-semibold">{coachName}</span>
+      ),
+    },
+    {
       title: "Actions",
       key: "actions",
       render: (_: any, record: Team) => (

@@ -23,10 +23,11 @@ module.exports = {
         eventstartDate,
         eventendDate,
         description,
+        createdBy
       } = data;
       await queryAsync(
-        "INSERT INTO events (eventName, eventYear, eventstartDate, eventendDate,description) VALUES (?, ?, ?, ?, ?)",
-        [eventName, eventYear, new Date(eventstartDate), new Date(eventendDate), description]
+        "INSERT INTO events (eventName, eventYear, eventstartDate, eventendDate,description,createdBy) VALUES (?, ?, ?, ?, ?,?)",
+        [eventName, eventYear, new Date(eventstartDate), new Date(eventendDate), description,createdBy]
       );
       return { success: 1, message: "Event created" };
     } catch (error) {
@@ -37,7 +38,23 @@ module.exports = {
   // Get Events
   fetchEvents: async () => {
     try {
-      const events = await queryAsync("SELECT * FROM events");
+      const events = await queryAsync(`
+        SELECT 
+          e.eventId,
+          e.eventName,
+          e.eventYear,
+          e.eventStartDate,
+          e.eventEndDate,
+          e.createdAt,
+          e.description,
+          e.createdBy,
+          e.updatedBy,
+          uc.username AS createdByName, -- User who created the event
+          uu.username AS updatedByName -- User who last updated the event
+        FROM events e
+        LEFT JOIN users uc ON e.createdBy = uc.id -- Join for createdBy
+        LEFT JOIN users uu ON e.updatedBy = uu.id -- Join for updatedBy
+      `);
       return { success: 1, results: events };
     } catch (error) {
       return { success: 0, message: error.message };
@@ -54,15 +71,17 @@ module.exports = {
         eventendDate,
         eventId,
         description,
+        updatedBy
       } = data;
       await queryAsync(
-        "UPDATE events SET eventName = ?, eventYear = ?, eventstartDate = ?, eventendDate = ?, description = ? WHERE eventId = ?",
+        "UPDATE events SET eventName = ?, eventYear = ?, eventstartDate = ?, eventendDate = ?, description = ?,updatedBy=? WHERE eventId = ?",
         [
           eventName,
           eventYear,
           new Date(eventstartDate),
           new Date(eventendDate),
           description,
+          updatedBy,
           eventId,
         ]
       );

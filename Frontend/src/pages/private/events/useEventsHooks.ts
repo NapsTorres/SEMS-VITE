@@ -7,9 +7,12 @@ import useEventsRequest from "../../../config/data/events";
 import EventsServices from "../../../config/service/events";
 import { Events } from "../../../types";
 import dayjs from "dayjs";
+import useStore from "../../../zustand/store/store";
+import { selector } from "../../../zustand/store/store.provider";
 
 export default function useEventsHooks() {
   const queryClient = useQueryClient(); 
+  const admin = useStore(selector('admin'))
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [editingEvents, setEditingEvents] = useState<Events | null>(null);
   const [form] = Form.useForm();
@@ -32,6 +35,9 @@ export default function useEventsHooks() {
     formData.append("eventendDate", new Date(values.eventendDate).toISOString());
     if(editingEvents){
         formData.append("eventId", editingEvents.eventId.toString());
+        formData.append("updatedBy", admin.info.id);
+    } else {
+      formData.append("createdBy", admin.info.id);
     }
     const mutation = editingEvents ? editEventsMutation : addEventsMutation;
     mutation(formData, {

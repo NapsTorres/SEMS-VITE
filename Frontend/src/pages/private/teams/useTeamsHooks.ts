@@ -6,9 +6,12 @@ import { useState } from "react";
 import { Team } from "../../../types";
 import useTeamsRequest from "../../../config/data/teams";
 import { useQueryClient } from "@tanstack/react-query";
+import useStore from "../../../zustand/store/store";
+import { selector } from "../../../zustand/store/store.provider";
 
 export default function useTeamsHooks() {
   const queryClient = useQueryClient();
+  const admin = useStore(selector('admin'))
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [isImageUpdated, setIsImageUpdated] = useState(false);
   const [editingTeam, setEditingTeam] = useState<Team | null>(null);
@@ -46,6 +49,9 @@ export default function useTeamsHooks() {
     formData.append("teamName", values.teamName);
     if(editingTeam){
         formData.append("teamId", editingTeam.teamId.toString());
+        formData.append("updatedBy", admin.info.id);
+    } else {
+      formData.append("addedBy", admin.info.id);
     }
     const mutation = editingTeam ? editTeamMutation : addTeamMutation;
     mutation(formData, {

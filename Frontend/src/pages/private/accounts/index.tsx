@@ -26,6 +26,7 @@ export const UserAccounts: React.FC = () => {
     { title: 'Team', dataIndex: ['teamInfo','teamName'], key: 'collegeName', render:(v:any) => v !== 'undefined' ? v : '-' },
     { title: 'Type', dataIndex: 'type', key: 'type' },
     { title: 'Status', dataIndex: 'status', key: 'status' },
+    { title: 'Added By', dataIndex: 'addedByUsername', key: 'addedByUsername' },
     {
       title: 'Actions',
       key: 'actions',

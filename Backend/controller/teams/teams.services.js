@@ -12,12 +12,12 @@ const queryAsync = util.promisify(pool.query).bind(pool);
 module.exports = {
   createTeams: async (data) => {
     try {
-      const { teamName, teamCoach, teamLogo } = data;
+      const { teamName, teamCoach, teamLogo,addedBy} = data;
       await checkUniqueField("teams", "teamName", teamName);
       const imageUrl = await uploadImage(teamLogo, teamLogo.originalname);
       await queryAsync(
-        "INSERT INTO teams (teamName, teamLogo, teamCoach) VALUES (?, ?, ?)",
-        [teamName, imageUrl, teamCoach]
+        "INSERT INTO teams (teamName, teamLogo, teamCoach,addedBy) VALUES (?, ?, ?,?)",
+        [teamName, imageUrl, teamCoach,addedBy]
       );
       const updatedTeams = await queryAsync("SELECT * FROM teams");
       return {
@@ -38,11 +38,18 @@ module.exports = {
           t.teamName,
           t.teamLogo,
           t.dateAdded,
+          t.addedBy,
+          t.updatedBy,
           u.username AS coachName,
-          u.id AS coachId
+          u.id AS coachId,
+          ua.username AS addedByName, -- Join for addedBy
+          uu.username AS updatedByName -- Join for updatedBy
         FROM teams t
-        LEFT JOIN users u ON t.teamCoach = u.id
+        LEFT JOIN users u ON t.teamCoach = u.id -- Join for team coach
+        LEFT JOIN users ua ON t.addedBy = ua.id -- Join for addedBy
+        LEFT JOIN users uu ON t.updatedBy = uu.id -- Join for updatedBy
       `);
+      console.log(teamLists)
       return {
         success: 1,
         results: teamLists,
@@ -156,19 +163,13 @@ module.exports = {
 
   editTeam: async (data) => {
     try {
-      let { teamName, teamCoach, teamLogo, teamId } = data;
+      let { teamName, teamCoach, teamLogo, teamId,updatedBy } = data;
       const existingData = await checkIfExists("teams", "teamId", teamId);
       await checkUniqueField(
         "teams",
         "teamName",
         teamName,
         existingData.teamName
-      );
-      await checkUniqueField(
-        "teams",
-        "teamCoach",
-        teamCoach,
-        existingData.teamCoach
       );
       let imageUrl = teamLogo;
       if (typeof teamLogo !== "string") {
@@ -179,8 +180,8 @@ module.exports = {
         );
       }
       await queryAsync(
-        "UPDATE teams SET teamName = ?, teamLogo = ?, teamCoach = ? WHERE teamId = ?",
-        [teamName, imageUrl, teamCoach, teamId]
+        "UPDATE teams SET teamName = ?, teamLogo = ?, teamCoach = ?,updatedBy=? WHERE teamId = ?",
+        [teamName, imageUrl, teamCoach,updatedBy, teamId]
       );
       const updatedTeam = await queryAsync("SELECT * FROM teams");
 

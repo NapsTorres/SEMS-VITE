@@ -271,14 +271,13 @@ const MatchSection: React.FC<{
 
         </AnimatedComponent>
         <br />
-        <div className="bg-white z-50 p-6 mt-16 rounded-md shadow-[0_3px_10px_rgb(0,0,0,0.2)]">
-          <AnimatedComponent variants={createSlideInVariant("down")}>
+        <div className="bg-white z-40 p-6 mt-16 rounded-md shadow-[0_3px_10px_rgb(0,0,0,0.2)]">
+         
             <BracketSection
               matches={filteredMatches[0]?.matches}
               teams={teams}
               bracketType={bracketType}
             />
-          </AnimatedComponent>
         </div>
       </div>
       <div className="absolute inset-0 before:absolute before:w-full before:h-full before:bg-gradient-to-br before:from-[#064518] before:to-[#f8ba00]"></div>

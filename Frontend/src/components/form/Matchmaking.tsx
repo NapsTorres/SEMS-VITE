@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useEffect } from "react";
 import { DatePicker, Select, Button, Form } from "antd";
 import moment from "moment";

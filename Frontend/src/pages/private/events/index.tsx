@@ -57,6 +57,8 @@ export const EventsPage: React.FC = () => {
             >
               <p><strong>Start Date:</strong> {dateFormatter(event.eventstartDate)}</p>
               <p><strong>End Date:</strong> {dateFormatter(event.eventendDate)}</p>
+              <p><strong>Added by:</strong> {event.createdByName}</p>
+              <p><strong>Updated by:</strong> {event.updatedByName}</p>
               <div dangerouslySetInnerHTML={{__html:event.description}} />
             </Card>
           </Col>

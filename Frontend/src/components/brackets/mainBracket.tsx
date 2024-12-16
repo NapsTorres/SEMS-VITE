@@ -12,6 +12,7 @@ interface MainBracketProps {
 }
 
 const MainBracket: React.FC<MainBracketProps> = ({ teams, matches,bracketType }) => {
+  
   return (
     <div className="w-full h-full">
       <h2 className="text-2xl font-semibold mb-4">Tournament Bracket</h2>

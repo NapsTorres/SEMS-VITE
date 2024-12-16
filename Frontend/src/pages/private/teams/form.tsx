@@ -42,13 +42,15 @@ const TeamsForm: React.FC<TeamsFormProps> = ({
     setFileList([]);
     setIsImageUpdated(true);
   };
-
   return (
     <Form
       form={form}
       layout="vertical"
       onFinish={handleAddOrEditTeam}
-      initialValues={editingTeam || {}}
+      initialValues={{
+        ...editingTeam,
+        teamCoach: editingTeam?.coachId || undefined, // Ensure teamCoach is properly initialized
+      }}
     >
       <Form.Item
         name="teamName"
@@ -62,7 +64,7 @@ const TeamsForm: React.FC<TeamsFormProps> = ({
         label="Team Coach"
         rules={[{ required: true, message: 'Please input the coach name!' }]}
       >
-             <Select>
+             <Select defaultValue={editingTeam?.coachId}>
               {coaches?.map((coach: any) => (
                 <Select.Option key={coach.id} value={coach.id}>Coach  {coach.username}</Select.Option>
               ))}

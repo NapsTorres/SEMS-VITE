@@ -1,12 +1,16 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 export interface Team {
+  coachName: string | Blob;
   teamId: number;
   teamName: string;
   teamCoach: string;
   teamLogo: any;
   players:any[];
+  coachId:any;
 }
 export interface Events {
+  updatedByName: ReactNode;
+  createdByName: any;
   eventId: number;
   eventName: string;
   eventYear: string;

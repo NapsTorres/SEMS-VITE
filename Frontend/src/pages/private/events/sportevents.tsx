@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import { Modal, Button } from "antd";
 import Marquee from "react-fast-marquee";
 import useSportEventHooks, {
@@ -11,14 +11,17 @@ import { useNavigate } from "react-router-dom";
 const SportEventInformation: React.FC<SportEventInformationProps> = ({
   sportDetails,
 }) => {
-  const { matches, handleGenerateMatchup } = useSportEventHooks({ sportDetails });
-  const [isModalVisible, setIsModalVisible] = useState(false);
+  const {
+    matches,
+    isModalVisible,
+    handleGenerateMatchup,
+    showModal,
+    handleCloseModal
+  } = useSportEventHooks({ sportDetails });
   const navigate = useNavigate();
 
   if (!sportDetails && !matches) return null;
 
-  const showModal = () => setIsModalVisible(true);
-  const handleCloseModal = () => setIsModalVisible(false);
   const handleBack = () => navigate(-0);
   console.log(sportDetails)
   return (  

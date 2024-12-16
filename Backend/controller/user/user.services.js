@@ -2,6 +2,8 @@ const {
   hashPassword,
   comparePassword,
 } = require("../../helpers/hashCompare.js");
+const jwt = require("jsonwebtoken");
+const SECRET_KEY = process.env.JWT_SECRET || "i3jCXU67a9f8Ul-LW5THvDP1JqTTD9OmmeEiaiMdhH4yp2e6PHZicR1jRq8gY3sX5VXIeTyL2LhYbCAQDAhF5Q";
 const pool = require("../../middleware/db.js");
 const util = require("util");
 const queryAsync = util.promisify(pool.query).bind(pool);
@@ -15,12 +17,13 @@ module.exports = {
         type,
         teamId,
         status,
+        addedBy
       } = data;
       password = await hashPassword(data.password);
   
       await queryAsync(
-        "INSERT INTO users(username, password, type, teamId, status) VALUES (?, ?, ?, ?, ?)",
-        [username, password, type, teamId, status]
+        "INSERT INTO users(username, password, type, teamId, status,addedBy) VALUES (?, ?, ?, ?, ?,?)",
+        [username, password, type, teamId, status,addedBy]
       );
       return { success: 1, message: "Account created" };
     } catch (error) {
@@ -48,7 +51,14 @@ module.exports = {
       } else {
         navigate = '/Dashboard'
       }
-      return { success: 1, results: res[0], message: "Login successfully",navigate };
+      const tokenPayload = {
+        id: res[0].id,
+        username: res[0].username,
+        type: res[0].type,
+      };
+      const token = jwt.sign(tokenPayload, SECRET_KEY, { expiresIn: "1h" });
+     
+      return { success: 1, results: res[0], message: "Login successfully",navigate,token };
     } catch (error) {
       return { success: 0, message: error.message };
     }
@@ -56,7 +66,14 @@ module.exports = {
 
   fetchUserList: async () => {
     try {
-      const users = await queryAsync("SELECT * FROM users where type != 'SuperAdmin'");
+      const users = await queryAsync(`
+        SELECT 
+          u.*, 
+          addedByUser.username AS addedByUsername 
+        FROM users u
+        LEFT JOIN users addedByUser ON u.addedBy = addedByUser.id
+        WHERE u.type != 'SuperAdmin'
+      `);
   
       const detailedUsers = await Promise.all(
         users.map(async (user) => {
@@ -74,7 +91,7 @@ module.exports = {
   
             return {
               ...user,
-              teamInfo:teamInfo[0],
+              teamInfo: teamInfo[0],
             };
           } else {
             return user;
@@ -88,6 +105,7 @@ module.exports = {
       return { success: 0, message: error.message };
     }
   },
+  
   
   updateUser: async (data) => {
     try {

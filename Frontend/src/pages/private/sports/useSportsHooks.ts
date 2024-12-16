@@ -6,9 +6,12 @@ import { Sports } from "../../../types";
 import { useQueryClient } from "@tanstack/react-query";
 import useSportsRequest from "../../../config/data/sports";
 import SportsServices from "../../../config/service/sports";
+import useStore from "../../../zustand/store/store";
+import { selector } from "../../../zustand/store/store.provider";
 
 export default function useSportsHooks() {
   const queryClient = useQueryClient(); 
+  const admin = useStore(selector('admin'))
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [isImageUpdated, setIsImageUpdated] = useState(false);
   const [editingSports, setEditingSports] = useState<Sports | null>(null);
@@ -42,6 +45,9 @@ export default function useSportsHooks() {
     formData.append("sportsLogo", values.sportsLogo);
     if(editingSports){
         formData.append("sportsId", editingSports.sportsId.toString());
+        formData.append("updatedBy", admin.info.id);
+    } else{
+      formData.append("createdBy", admin.info.id);
     }
     const mutation = editingSports ? editSportMutation : addSportMutation;
     mutation(formData, {

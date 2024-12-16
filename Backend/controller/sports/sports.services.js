@@ -9,12 +9,12 @@ module.exports = {
   // Create a new team
   createSports: async (data) => {
     try {
-      const { sportsName, sportsLogo, description } = data;
+      const { sportsName, sportsLogo, description,createdBy } = data;
       await checkUniqueField("sports", "sportsName", sportsName);
       const imageUrl = await uploadImage(sportsLogo, sportsLogo.originalname);
       await queryAsync(
-        "INSERT INTO sports (sportsName, sportsLogo, description) VALUES (?, ?, ?)",
-        [sportsName, imageUrl, description]
+        "INSERT INTO sports (sportsName, sportsLogo, description,createdBy) VALUES (?, ?, ?,?)",
+        [sportsName, imageUrl, description,createdBy]
       );
       return {
         success: 1,
@@ -25,10 +25,23 @@ module.exports = {
     }
   },
 
-  // Fetch all teams
   fetchSports: async () => {
     try {
-      const sportLists = await queryAsync("SELECT * FROM sports");
+      const sportLists = await queryAsync(`
+        SELECT 
+          s.sportsId,
+          s.sportsName,
+          s.sportsLogo,
+          s.description,
+          s.createdAt,
+          s.createdBy,
+          u1.username AS createdByUsername,
+          s.updatedBy,
+          u2.username AS updatedByUsername
+        FROM sports s
+        LEFT JOIN users u1 ON s.createdBy = u1.id
+        LEFT JOIN users u2 ON s.updatedBy = u2.id
+      `);
       return {
         success: 1,
         results: sportLists,
@@ -42,7 +55,7 @@ module.exports = {
   // Edit a team by ID
   editSports: async (data) => {
     try {
-      let { sportsName, sportsLogo, description, sportsId } = data;
+      let { sportsName, sportsLogo, description, sportsId,updatedBy } = data;
       const existingData = await checkIfExists("sports", "sportsId", sportsId);
       await checkUniqueField(
         "sports",
@@ -59,8 +72,8 @@ module.exports = {
         );
       }
       await queryAsync(
-        "UPDATE sports SET sportsName = ?, sportsLogo = ?, description = ? WHERE sportsId = ?",
-        [sportsName, imageUrl, description, sportsId]
+        "UPDATE sports SET sportsName = ?, sportsLogo = ?, description = ?,updatedBy=? WHERE sportsId = ?",
+        [sportsName, imageUrl, description,updatedBy, sportsId]
       );
 
       return {
@@ -160,8 +173,6 @@ module.exports = {
           `,
           [event.eventId] // Pass the current event ID dynamically
         );
-      
-        console.log('eventId', idx, event.eventId);
       
         const parsedSportsEvents = sportsEvents.map((sportEvent) => ({
           ...sportEvent,
