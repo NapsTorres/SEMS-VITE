@@ -1,9 +1,9 @@
 const { createPool } = require("mysql2");
 const pool = createPool({
   host: 'sql12.freesqldatabase.com',
-  user: 'sql12747039',
-  password: 'vXJXtUFkfT',
-  database: 'sql12747039',
+  user: 'sql12755276',
+  password: 'bbqitSdbb6',
+  database: 'sql12755276',
   port: 3306,
   connectionLimit: 10,
   connectTimeout: 120000  // 120 seconds
