@@ -8,8 +8,13 @@ export interface Team {
   players:any[];
   coachId:any;
 }
+
+export interface BracketTeam {
+  teamId: number;
+}
+
 export interface Events {
-  updatedByName: ReactNode;
+  updatedByName: any;
   createdByName: any;
   eventId: number;
   eventName: string;
@@ -61,6 +66,8 @@ export interface Match {
   status: string;
   winner_team_id: number | null;
   isFinal?: boolean;
+  bracketRound?: number;
+  byeTeam?: boolean;
 }
 
 export interface SingleEliminationBracketProps {

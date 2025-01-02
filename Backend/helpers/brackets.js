@@ -5,18 +5,18 @@ const queryAsync = util.promisify(pool.query).bind(pool);
 
 exports.generateMatches = async (req, res) => {
   const { eventId } = req.params;
-  let { bracketType, firstRoundMatches } = req.body;
+  let { bracketType, teams } = req.body;
 
   try {
     switch (bracketType) {
       case "Single Elimination":
-        await generateSingleEliminationMatches(eventId, firstRoundMatches);
+        await generateSingleEliminationMatches(eventId, teams);
         break;
       case "Double Elimination":
-        await generateDoubleEliminationMatches(eventId, firstRoundMatches);
+        await generateDoubleEliminationMatches(eventId, teams);
         break;
       case "Round Robin":
-        await generateRoundRobinMatches(eventId, firstRoundMatches);
+        await generateRoundRobinMatches(eventId, teams);
         break;
       default:
         return res.status(400).json({ error: "Invalid bracket type" });
@@ -28,9 +28,13 @@ exports.generateMatches = async (req, res) => {
   }
 };
 
+const getNextPowerOfTwo = (n) => {
+  return Math.pow(2, Math.ceil(Math.log2(n)));
+};
+
 const generateSingleEliminationMatches = async (
   sportEventsId,
-  firstRoundMatches,
+  teams,
   sportsId
 ) => {
   const bracketQuery =
@@ -43,35 +47,136 @@ const generateSingleEliminationMatches = async (
     .query(bracketQuery, [sportsId, "Single Elimination Bracket", true]);
   const bracket_id = bracketResult.insertId;
 
-  let currentRoundMatchIds = [];
+  const matchIdMap = new Map(); // To store match IDs for reference
+  const winnerToRound2Map = new Map(); // To store which round 2 match each winner should go to
 
-  for (const match of firstRoundMatches) {
-    const { team1Id, team2Id, date } = match;
+  // Group teams by round
+  const round1Teams = teams.filter(team => !team.round || team.round === 1);
+  const round2Matches = teams.filter(team => team.round === 2);
+
+  // First, map out where winners should go in round 2
+  round2Matches.forEach(match => {
+    if (match.team1?.winnerFrom) {
+      winnerToRound2Map.set(match.team1.winnerFrom, {
+        matchId: match.matchId,
+        position: 'team1'
+      });
+    }
+    if (match.team2?.winnerFrom) {
+      winnerToRound2Map.set(match.team2.winnerFrom, {
+        matchId: match.matchId,
+        position: 'team2'
+      });
+    }
+  });
+
+  // Create first round matches
+  for (let i = 0; i < round1Teams.length; i += 2) {
+    const team1 = round1Teams[i];
+    const team2 = round1Teams[i + 1];
+    
     const [matchResult] = await db
       .promise()
       .query(matchQuery, [
         sportEventsId,
         bracket_id,
         1,
-        team1Id,
-        team2Id,
+        team1?.teamId || null,
+        team2?.teamId || null,
         "Pending",
-        date,
+        team1?.date || null,  // Use the date from the team data
         null,
         0,
       ]);
-    currentRoundMatchIds.push(matchResult.insertId);
+    const matchId = matchResult.insertId;
+    matchIdMap.set(i/2 + 1, matchId); // Store match ID with its number (1-based)
   }
 
-  let round = 2;
+  // Create second round matches
+  const round2MatchIds = [];
+  const round2MatchesMap = new Map(); // Store round 2 matches for updating later
+  
+  for (const match of round2Matches) {
+    // Create the match with the specified teams
+    const [matchResult] = await db
+      .promise()
+      .query(matchQuery, [
+        sportEventsId,
+        bracket_id,
+        2,
+        match.team1?.teamId || null,
+        match.team2?.teamId || null,
+        "Pending",
+        match.date || null,  // Use the date from the match data
+        null,
+        0,
+      ]);
+    const round2MatchId = matchResult.insertId;
+    round2MatchIds.push(round2MatchId);
+    round2MatchesMap.set(match.matchId, round2MatchId);
 
+    // Link winners from round 1 to their designated spots in round 2
+    if (match.team1?.winnerFrom) {
+      const round1MatchId = matchIdMap.get(match.team1.winnerFrom);
+      if (round1MatchId) {
+        await db
+          .promise()
+          .query("UPDATE matches SET next_match_id = ? WHERE matchId = ?", [
+            round2MatchId,
+            round1MatchId
+          ]);
+
+        // Check if this match already has a winner and update round 2 if needed
+        const [round1Match] = await db
+          .promise()
+          .query("SELECT winner_team_id FROM matches WHERE matchId = ?", [round1MatchId]);
+        
+        if (round1Match[0]?.winner_team_id) {
+          await db
+            .promise()
+            .query("UPDATE matches SET team1Id = ? WHERE matchId = ?", [
+              round1Match[0].winner_team_id,
+              round2MatchId
+            ]);
+        }
+      }
+    }
+
+    if (match.team2?.winnerFrom) {
+      const round1MatchId = matchIdMap.get(match.team2.winnerFrom);
+      if (round1MatchId) {
+        await db
+          .promise()
+          .query("UPDATE matches SET next_match_id = ? WHERE matchId = ?", [
+            round2MatchId,
+            round1MatchId
+          ]);
+
+        // Check if this match already has a winner and update round 2 if needed
+        const [round1Match] = await db
+          .promise()
+          .query("SELECT winner_team_id FROM matches WHERE matchId = ?", [round1MatchId]);
+        
+        if (round1Match[0]?.winner_team_id) {
+          await db
+            .promise()
+            .query("UPDATE matches SET team2Id = ? WHERE matchId = ?", [
+              round1Match[0].winner_team_id,
+              round2MatchId
+            ]);
+        }
+      }
+    }
+  }
+
+  currentRoundMatchIds = round2MatchIds;
+  let round = 3;
+
+  // Continue with remaining rounds
   while (currentRoundMatchIds.length > 1) {
     const nextRoundMatchIds = [];
 
     for (let i = 0; i < currentRoundMatchIds.length; i += 2) {
-      const team1MatchId = currentRoundMatchIds[i];
-      const team2MatchId = currentRoundMatchIds[i + 1] || null;
-
       const [nextMatchResult] = await db
         .promise()
         .query(matchQuery, [
@@ -92,14 +197,14 @@ const generateSingleEliminationMatches = async (
         .promise()
         .query("UPDATE matches SET next_match_id = ? WHERE matchId = ?", [
           nextMatchId,
-          team1MatchId,
+          currentRoundMatchIds[i],
         ]);
-      if (team2MatchId) {
+      if (currentRoundMatchIds[i + 1]) {
         await db
           .promise()
           .query("UPDATE matches SET next_match_id = ? WHERE matchId = ?", [
             nextMatchId,
-            team2MatchId,
+            currentRoundMatchIds[i + 1],
           ]);
       }
     }
@@ -117,12 +222,13 @@ const generateSingleEliminationMatches = async (
   }
 };
 
-const generateDoubleEliminationMatches = async (sportEventsId, firstRoundMatches,sportsId) => {
+const generateDoubleEliminationMatches = async (sportEventsId, teams, sportsId) => {
   const bracketQuery =
     "INSERT INTO brackets (sportsId, bracketType, isElimination) VALUES (?, ?, ?)";
   const matchQuery =
     "INSERT INTO matches (sportEventsId, bracketId, round, team1Id, team2Id, status, schedule, next_match_id, loser_next_match_id, isFinal, bracketType) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
+  // Create brackets
   const [winnerBracketResult] = await db
     .promise()
     .query(bracketQuery, [sportsId, "Winner Bracket", true]);
@@ -137,41 +243,130 @@ const generateDoubleEliminationMatches = async (sportEventsId, firstRoundMatches
   const loser_bracket_id = loserBracketResult.insertId;
   const final_rematch_bracket_id = finalRematchBracketResult.insertId;
 
-  let currentWinnerRoundMatchIds = [];
+  // Group teams by round
+  const round1Teams = teams.filter(team => !team.round || team.round === 1);
+  const round2Matches = teams.filter(team => team.round === 2);
 
-  for (const match of firstRoundMatches) {
-    const { team1Id, team2Id, date } = match;
+  // Create first round matches in winner bracket
+  const winnerRound1MatchIds = new Map(); // Store match IDs for reference
+  for (let i = 0; i < round1Teams.length; i += 2) {
+    const team1 = round1Teams[i];
+    const team2 = round1Teams[i + 1];
+    
     const [matchResult] = await db
       .promise()
       .query(matchQuery, [
         sportEventsId,
         winner_bracket_id,
-        1, 
-        team1Id,
-        team2Id,
+        1,
+        team1?.teamId || null,
+        team2?.teamId || null,
         "Pending",
-        date,
+        team1?.date || null,
         null,
         null,
         0,
         "winners",
       ]);
-    currentWinnerRoundMatchIds.push(matchResult.insertId);
+    const matchId = matchResult.insertId;
+    winnerRound1MatchIds.set(i/2 + 1, matchId); // Store match ID with its number (1-based)
   }
 
-  const nextWinnerRoundMatchIds = [];
+  // Create second round matches in winner bracket with proper team placement
+  const winnerRound2MatchIds = [];
   const loserRound1MatchIds = [];
 
-  for (let i = 0; i < currentWinnerRoundMatchIds.length; i += 2) {
-    const team1MatchId = currentWinnerRoundMatchIds[i];
-    const team2MatchId = currentWinnerRoundMatchIds[i + 1];
-
-    const [nextMatchResult] = await db
+  for (const match of round2Matches) {
+    // Create winner bracket match
+    const [winnerMatchResult] = await db
       .promise()
       .query(matchQuery, [
         sportEventsId,
         winner_bracket_id,
-        2, 
+        2,
+        match.team1?.teamId || null,
+        match.team2?.teamId || null,
+        "Pending",
+        match.date || null,
+        null,
+        null,
+        0,
+        "winners",
+      ]);
+    const winnerMatchId = winnerMatchResult.insertId;
+    winnerRound2MatchIds.push(winnerMatchId);
+
+    // Link winners from round 1 to their designated spots in round 2
+    if (match.team1?.winnerFrom) {
+      const round1MatchId = winnerRound1MatchIds.get(match.team1.winnerFrom);
+      if (round1MatchId) {
+        await db
+          .promise()
+          .query("UPDATE matches SET next_match_id = ? WHERE matchId = ?", [
+            winnerMatchId,
+            round1MatchId,
+          ]);
+      }
+    }
+    if (match.team2?.winnerFrom) {
+      const round1MatchId = winnerRound1MatchIds.get(match.team2.winnerFrom);
+      if (round1MatchId) {
+        await db
+          .promise()
+          .query("UPDATE matches SET next_match_id = ? WHERE matchId = ?", [
+            winnerMatchId,
+            round1MatchId,
+          ]);
+      }
+    }
+
+    // Create corresponding loser bracket match only if there are first round matches
+    if (round1Teams.length > 0) {
+      const [loserMatchResult] = await db
+        .promise()
+        .query(matchQuery, [
+          sportEventsId,
+          loser_bracket_id,
+          1,
+          null,
+          null,
+          "Pending",
+          null,
+          null,
+          null,
+          0,
+          "losers",
+        ]);
+      const loserMatchId = loserMatchResult.insertId;
+      loserRound1MatchIds.push(loserMatchId);
+
+      // Link losers from winner bracket to loser bracket
+      const round1MatchIds = [
+        match.team1?.winnerFrom ? winnerRound1MatchIds.get(match.team1.winnerFrom) : null,
+        match.team2?.winnerFrom ? winnerRound1MatchIds.get(match.team2.winnerFrom) : null,
+      ].filter(id => id !== null);
+
+      for (const matchId of round1MatchIds) {
+        if (matchId) {
+          await db
+            .promise()
+            .query("UPDATE matches SET loser_next_match_id = ? WHERE matchId = ?", [
+              loserMatchId,
+              matchId,
+            ]);
+        }
+      }
+    }
+  }
+
+  // Create final winner bracket match if needed
+  if (winnerRound2MatchIds.length > 1) {
+    const [finalWinnerMatchResult] = await db
+      .promise()
+      .query(matchQuery, [
+        sportEventsId,
+        winner_bracket_id,
+        3,
         null,
         null,
         "Pending",
@@ -181,226 +376,244 @@ const generateDoubleEliminationMatches = async (sportEventsId, firstRoundMatches
         0,
         "winners",
       ]);
-    const nextMatchId = nextMatchResult.insertId;
-    nextWinnerRoundMatchIds.push(nextMatchId);
+    const finalWinnerMatchId = finalWinnerMatchResult.insertId;
 
-    await db
-      .promise()
-      .query("UPDATE matches SET next_match_id = ? WHERE matchId = ?", [
-        nextMatchId,
-        team1MatchId,
-      ]);
-    await db
-      .promise()
-      .query("UPDATE matches SET next_match_id = ? WHERE matchId = ?", [
-        nextMatchId,
-        team2MatchId,
-      ]);
-
-    const [loserMatchResult] = await db
-      .promise()
-      .query(matchQuery, [
-        sportEventsId,
-        loser_bracket_id,
-        1, 
-        null,
-        null,
-        "Pending",
-        null,
-        null,
-        null,
-        0,
-        "losers",
-      ]);
-    const loserMatchId = loserMatchResult.insertId;
-    loserRound1MatchIds.push(loserMatchId);
-
-    await db
-      .promise()
-      .query("UPDATE matches SET loser_next_match_id = ? WHERE matchId = ?", [
-        loserMatchId,
-        team1MatchId,
-      ]);
-    await db
-      .promise()
-      .query("UPDATE matches SET loser_next_match_id = ? WHERE matchId = ?", [
-        loserMatchId,
-        team2MatchId,
-      ]);
+    // Link winners from round 2 to final winner match
+    for (const matchId of winnerRound2MatchIds) {
+      await db
+        .promise()
+        .query("UPDATE matches SET next_match_id = ? WHERE matchId = ?", [
+          finalWinnerMatchId,
+          matchId,
+        ]);
+    }
   }
 
-  currentWinnerRoundMatchIds = nextWinnerRoundMatchIds;
+  // Create loser bracket progression matches only if there are matches in loser bracket
+  if (loserRound1MatchIds.length > 0) {
+    const nextPowerOfTwo = Math.pow(2, Math.ceil(Math.log2(teams.length)));
+    const shouldSkipRound1 = loserRound1MatchIds.length < (nextPowerOfTwo / 2);
+    
+    let currentLoserRoundMatchIds = loserRound1MatchIds;
+    let loserRound = shouldSkipRound1 ? 2 : 1;
 
-  const [finalWinnerMatchResult] = await db
-    .promise()
-    .query(matchQuery, [
-      sportEventsId,
-      winner_bracket_id,
-      3,
-      null,
-      null,
-      "Pending",
-      null,
-      null,
-      null,
-      0,
-      "winners",
-    ]);
-  const finalWinnerMatchId = finalWinnerMatchResult.insertId;
+    // If we're skipping round 1, we'll create round 2 matches directly
+    if (shouldSkipRound1) {
+      const loserRound2MatchIds = [];
+      const totalRound2Matches = Math.ceil((loserRound1MatchIds.length + winnerRound2MatchIds.length) / 2);
 
-  for (const matchId of currentWinnerRoundMatchIds) {
-    await db
-      .promise()
-      .query("UPDATE matches SET next_match_id = ? WHERE matchId = ?", [
-        finalWinnerMatchId,
-        matchId,
-      ]);
+      for (let i = 0; i < totalRound2Matches; i++) {
+        const [loserMatchResult] = await db
+          .promise()
+          .query(matchQuery, [
+            sportEventsId,
+            loser_bracket_id,
+            2,
+            null,
+            null,
+            "Pending",
+            null,
+            null,
+            null,
+            0,
+            "losers",
+          ]);
+        const loserMatchId = loserMatchResult.insertId;
+        loserRound2MatchIds.push(loserMatchId);
+
+        // Link losers from winner bracket to these matches
+        if (i < winnerRound2MatchIds.length) {
+          await db
+            .promise()
+            .query("UPDATE matches SET loser_next_match_id = ? WHERE matchId = ?", [
+              loserMatchId,
+              winnerRound2MatchIds[i],
+            ]);
+        }
+        
+        // Link losers from round 1 to these matches
+        if (i < loserRound1MatchIds.length) {
+          await db
+            .promise()
+            .query("UPDATE matches SET next_match_id = ? WHERE matchId = ?", [
+              loserMatchId,
+              loserRound1MatchIds[i],
+            ]);
+        }
+      }
+
+      currentLoserRoundMatchIds = loserRound2MatchIds;
+      loserRound = 3;
+    } else {
+      // Original code for when we don't skip round 1
+      // Create first set of matches for losers from winner bracket round 2
+      const loserRound2MatchIds = [];
+      for (let i = 0; i < winnerRound2MatchIds.length; i++) {
+        const [loserMatchResult] = await db
+          .promise()
+          .query(matchQuery, [
+            sportEventsId,
+            loser_bracket_id,
+            2,
+            null,
+            null,
+            "Pending",
+            null,
+            null,
+            null,
+            0,
+            "losers",
+          ]);
+        const loserMatchId = loserMatchResult.insertId;
+        loserRound2MatchIds.push(loserMatchId);
+
+        // Link loser from winner bracket round 2 to this match
+        await db
+          .promise()
+          .query("UPDATE matches SET loser_next_match_id = ? WHERE matchId = ?", [
+            loserMatchId,
+            winnerRound2MatchIds[i],
+          ]);
+      }
+
+      // Merge loser matches from both rounds for further progression
+      currentLoserRoundMatchIds = [...currentLoserRoundMatchIds, ...loserRound2MatchIds];
+      loserRound = 3;
+    }
+
+    while (currentLoserRoundMatchIds.length > 1) {
+      const nextRoundMatchIds = [];
+      
+      for (let i = 0; i < currentLoserRoundMatchIds.length; i += 2) {
+        const [matchResult] = await db
+          .promise()
+          .query(matchQuery, [
+            sportEventsId,
+            loser_bracket_id,
+            loserRound,
+            null,
+            null,
+            "Pending",
+            null,
+            null,
+            null,
+            0,
+            "losers",
+          ]);
+        const matchId = matchResult.insertId;
+        nextRoundMatchIds.push(matchId);
+
+        // Link previous matches to this one
+        await db
+          .promise()
+          .query("UPDATE matches SET next_match_id = ? WHERE matchId = ?", [
+            matchId,
+            currentLoserRoundMatchIds[i],
+          ]);
+        if (currentLoserRoundMatchIds[i + 1]) {
+          await db
+            .promise()
+            .query("UPDATE matches SET next_match_id = ? WHERE matchId = ?", [
+              matchId,
+              currentLoserRoundMatchIds[i + 1],
+            ]);
+        }
+      }
+
+      currentLoserRoundMatchIds = nextRoundMatchIds;
+      loserRound++;
+    }
+
+    // Create final loser bracket match if needed
+    if (currentLoserRoundMatchIds.length === 1) {
+      const [finalLoserMatchResult] = await db
+        .promise()
+        .query(matchQuery, [
+          sportEventsId,
+          loser_bracket_id,
+          loserRound,
+          null,
+          null,
+          "Pending",
+          null,
+          null,
+          null,
+          0,
+          "losers",
+        ]);
+      const finalLoserMatchId = finalLoserMatchResult.insertId;
+
+      // Link last loser match to final
+      await db
+        .promise()
+        .query("UPDATE matches SET next_match_id = ? WHERE matchId = ?", [
+          finalLoserMatchId,
+          currentLoserRoundMatchIds[0],
+        ]);
+
+      // Create final match (winner bracket winner vs loser bracket winner)
+      const [firstFinalMatchResult] = await db
+        .promise()
+        .query(matchQuery, [
+          sportEventsId,
+          winner_bracket_id,
+          loserRound + 1,
+          null,
+          null,
+          "Pending",
+          null,
+          null,
+          null,
+          1,
+          "final",
+        ]);
+      const firstFinalMatchId = firstFinalMatchResult.insertId;
+
+      // Link winners to final
+      const lastWinnerMatch = winnerRound2MatchIds.length > 1 ? 
+        await queryAsync("SELECT matchId FROM matches WHERE bracketType = 'winners' AND round = 3 AND sportEventsId = ? LIMIT 1", [sportEventsId]) :
+        winnerRound2MatchIds[0];
+
+      await db
+        .promise()
+        .query("UPDATE matches SET next_match_id = ? WHERE matchId = ?", [
+          firstFinalMatchId,
+          lastWinnerMatch.matchId || lastWinnerMatch,
+        ]);
+      await db
+        .promise()
+        .query("UPDATE matches SET next_match_id = ? WHERE matchId = ?", [
+          firstFinalMatchId,
+          finalLoserMatchId,
+        ]);
+
+      // Create potential reset match
+      const [resetMatchResult] = await db
+        .promise()
+        .query(matchQuery, [
+          sportEventsId,
+          final_rematch_bracket_id,
+          loserRound + 2,
+          null,
+          null,
+          "Pending",
+          null,
+          null,
+          null,
+          1,
+          "final_rematch",
+        ]);
+      const resetMatchId = resetMatchResult.insertId;
+
+      // Link final to potential reset match
+      await db
+        .promise()
+        .query("UPDATE matches SET next_match_id = ? WHERE matchId = ?", [
+          resetMatchId,
+          firstFinalMatchId,
+        ]);
+    }
   }
-  const loserRound2MatchIds = [];
-
-  for (let i = 0; i < loserRound1MatchIds.length; i++) {
-    const [loserMatchResult] = await db
-      .promise()
-      .query(matchQuery, [
-        sportEventsId,
-        loser_bracket_id,
-        2, 
-        null,
-        null,
-        "Pending",
-        null,
-        null,
-        null,
-        0,
-        "losers",
-      ]);
-    const loserRound2MatchId = loserMatchResult.insertId;
-    loserRound2MatchIds.push(loserRound2MatchId);
-
-    await db
-      .promise()
-      .query("UPDATE matches SET next_match_id = ? WHERE matchId = ?", [
-        loserRound2MatchId,
-        loserRound1MatchIds[i],
-      ]);
-
-    await db
-      .promise()
-      .query("UPDATE matches SET loser_next_match_id = ? WHERE matchId = ?", [
-        loserRound2MatchId,
-        currentWinnerRoundMatchIds[i],
-      ]);
-  }
-
-  const [loserRound3MatchResult] = await db
-    .promise()
-    .query(matchQuery, [
-      sportEventsId,
-      loser_bracket_id,
-      3, 
-      null,
-      null,
-      "Pending",
-      null,
-      null,
-      null,
-      0,
-      "losers",
-    ]);
-  const loserRound3MatchId = loserRound3MatchResult.insertId;
-
-  for (const matchId of loserRound2MatchIds) {
-    await db
-      .promise()
-      .query("UPDATE matches SET next_match_id = ? WHERE matchId = ?", [
-        loserRound3MatchId,
-        matchId,
-      ]);
-  }
-
-  const [loserRound4MatchResult] = await db
-    .promise()
-    .query(matchQuery, [
-      sportEventsId,
-      loser_bracket_id,
-      4, 
-      null,
-      null,
-      "Pending",
-      null,
-      null,
-      null,
-      0,
-      "losers",
-    ]);
-  const loserRound4MatchId = loserRound4MatchResult.insertId;
-
-  await db
-    .promise()
-    .query("UPDATE matches SET next_match_id = ? WHERE matchId = ?", [
-      loserRound4MatchId,
-      loserRound3MatchId,
-    ]);
-
-  await db
-    .promise()
-    .query("UPDATE matches SET loser_next_match_id = ? WHERE matchId = ?", [
-      loserRound4MatchId,
-      finalWinnerMatchId,
-    ]);
-    const [firstFinalMatchResult] = await db
-    .promise()
-    .query(matchQuery, [
-      sportEventsId,
-      winner_bracket_id, 
-      5,
-      null, 
-      null, 
-      "Pending",
-      null, 
-      null,
-      null, 
-      1, 
-      "final",
-    ]);
-  const firstFinalMatchId = firstFinalMatchResult.insertId;
-  
-  await db
-    .promise()
-    .query("UPDATE matches SET next_match_id = ? WHERE matchId = ?", [
-      firstFinalMatchId,
-      finalWinnerMatchId, 
-    ]);
-  await db
-    .promise()
-    .query("UPDATE matches SET next_match_id = ? WHERE matchId = ?", [
-      firstFinalMatchId,
-      loserRound4MatchId, 
-    ]);
-  
-  const [resetMatchResult] = await db
-    .promise()
-    .query(matchQuery, [
-      sportEventsId,
-      final_rematch_bracket_id,
-      6, 
-      null,
-      null, 
-      "Pending",
-      null, 
-      null, 
-      null, 
-      1, 
-      "final_rematch", 
-    ]);
-  const resetMatchId = resetMatchResult.insertId;
-  
-  await db
-    .promise()
-    .query("UPDATE matches SET next_match_id = ? WHERE matchId = ?", [
-      resetMatchId,
-      firstFinalMatchId,
-    ]);
 };
 
 const generateRoundRobinMatches = async (sportEventsId, teams,sportsId) => {
@@ -483,46 +696,66 @@ const advanceWinnerToNextMatch = async (winnerId, nextMatchId) => {
   }
 };
 
-async function setTeamInNextMatch(matchId, teamId,stat) {
+async function setTeamInNextMatch(matchId, teamId, stat) {
   if (!teamId) {
     console.error("Invalid teamId provided:", teamId);
     return;
   }
 
   try {
-    const match = await queryAsync("SELECT team1Id, team2Id FROM matches WHERE matchId = ?", [matchId]);
+    // First get the current match details including next_match_id
+    const [match] = await queryAsync(
+      "SELECT matchId, team1Id, team2Id, next_match_id, team1stat, team2stat FROM matches WHERE matchId = ?", 
+      [matchId]
+    );
 
     if (match.length === 0) {
       console.error(`Match with matchId ${matchId} not found.`);
       return;
     }
 
-    const { team1Id, team2Id } = match[0];
-    
-    let updateField;
-    let statistics;
-    if (team1Id === null || team1Id === 0) {
-      updateField = "team1Id";
-      statistics = "team1stat";
-    } else if (team2Id === null || team2Id === 0) {
-      updateField = "team2Id";
-      statistics = "team2stat";
-    } else {
-      console.error(
-        `Both team1Id(${team1Id}) and team2Id(${team2Id}) are already set for matchId ${matchId}.`
+    // If this match has a next_match_id, we need to update the corresponding match
+    if (match.next_match_id) {
+      const [nextMatch] = await queryAsync(
+        "SELECT team1Id, team2Id, team1stat, team2stat FROM matches WHERE matchId = ?",
+        [match.next_match_id]
       );
-      return; 
+
+      // Check if this winner should go to a specific position based on the bracket setup
+      const winnerFromMatch = await queryAsync(
+        "SELECT team1Id, team2Id, team1stat, team2stat FROM matches WHERE next_match_id = ? AND matchId != ?",
+        [match.next_match_id, matchId]
+      );
+
+      let updateField = "team1Id";
+      let statistics = "team1stat";
+
+      // If there's another match feeding into this one, respect the positions
+      if (winnerFromMatch.length > 0) {
+        // If the other match's winner goes to team1, this one goes to team2
+        if (winnerFromMatch[0].team1Id === null) {
+          updateField = "team2Id";
+          statistics = "team2stat";
+        }
+      } else {
+        // If no specific position is set, use first available position
+        if (nextMatch.team1Id !== null) {
+          updateField = "team2Id";
+          statistics = "team2stat";
+        }
+      }
+
+      // Update the next match with the winner
+      await queryAsync(
+        `UPDATE matches SET ${updateField} = ?, ${statistics} = ? WHERE matchId = ?`,
+        [teamId, stat, match.next_match_id]
+      );
+
+      console.log(
+        `Updated ${updateField} in next match ${match.next_match_id} with winner team ${teamId}`
+      );
     }
 
-    const res = await queryAsync(`UPDATE matches SET ${updateField} = ?, ${statistics} = ? WHERE matchId = ?`, [
-        teamId,
-        stat,
-        matchId,
-      ]);
-
-    console.log(
-      `Successfully updated ${updateField} in match ${matchId} with teamId ${teamId}.${res}`
-    );
   } catch (error) {
     console.error("Error in setTeamInNextMatch:", error);
   }
@@ -633,6 +866,142 @@ const updateTeamStanding = async (winnerTeamId, loserTeamId,sportEventId) => {
   }
 };
 
+const doubleSetWinner = async (data) => {
+  const { team1Score, team2Score, matchId } = data;
+
+  try {
+    const matchResult = await queryAsync(
+      "SELECT * FROM matches WHERE matchId = ?",
+      [matchId]
+    );
+    if (matchResult.length === 0)
+      return { success: 0, message: "Match not found" };
+
+    const match = matchResult[0];
+    const {
+      team1Id,
+      team2Id,
+      bracketType,
+      next_match_id,
+      loser_next_match_id,
+      sportEventsId,
+      isFinal,
+    } = match;
+
+    let winnerTeamId, loserTeamId;
+    if (team1Score > team2Score) {
+      winnerTeamId = team1Id;
+      loserTeamId = team2Id;
+    } else if (team2Score > team1Score) {
+      winnerTeamId = team2Id;
+      loserTeamId = team1Id;
+    } else {
+      return {
+        success: 0,
+        message: "Scores cannot be equal in elimination matches.",
+      };
+    }
+
+    // Update current match with scores and winner
+    await queryAsync(
+      "UPDATE matches SET team1Score = ?, team2Score = ?, winner_team_id = ?, status = 'completed' WHERE matchId = ?",
+      [team1Score, team2Score, winnerTeamId, matchId]
+    );
+
+    await updateTeamStanding(winnerTeamId, loserTeamId, sportEventsId);
+
+    // Handle winner progression (similar to single elimination)
+    if (next_match_id) {
+      const [nextMatch] = await queryAsync(
+        "SELECT * FROM matches WHERE matchId = ?",
+        [next_match_id]
+      );
+
+      if (nextMatch) {
+        // Find if there's another match feeding into the same next match
+        const [otherMatch] = await queryAsync(
+          "SELECT * FROM matches WHERE next_match_id = ? AND matchId != ?",
+          [next_match_id, matchId]
+        );
+
+        // Determine which position this winner should take
+        let updateField = "team1Id";
+        let updateStat = "team1stat";
+
+        // If there's another match feeding into this one, coordinate positions
+        if (otherMatch) {
+          if (otherMatch.team1Id === null) {
+            updateField = "team2Id";
+            updateStat = "team2stat";
+          }
+        } else {
+          // If no other match, use first available position
+          if (nextMatch.team1Id !== null) {
+            updateField = "team2Id";
+            updateStat = "team2stat";
+          }
+        }
+
+        // Update next match with winner
+        await queryAsync(
+          `UPDATE matches SET ${updateField} = ?, ${updateStat} = ? WHERE matchId = ?`,
+          [winnerTeamId, bracketType === 'winners' ? 'winnerBracket' : 'loserBracket', next_match_id]
+        );
+      }
+    }
+
+    // Handle loser progression to loser bracket
+    if (loser_next_match_id) {
+      const [loserNextMatch] = await queryAsync(
+        "SELECT * FROM matches WHERE matchId = ?",
+        [loser_next_match_id]
+      );
+
+      if (loserNextMatch) {
+        // Similar logic for loser placement
+        let updateField = "team1Id";
+        let updateStat = "team1stat";
+
+        const [otherLoserMatch] = await queryAsync(
+          "SELECT * FROM matches WHERE next_match_id = ? AND matchId != ?",
+          [loser_next_match_id, matchId]
+        );
+
+        if (otherLoserMatch) {
+          if (otherLoserMatch.team1Id === null) {
+            updateField = "team2Id";
+            updateStat = "team2stat";
+          }
+        } else if (loserNextMatch.team1Id !== null) {
+            updateField = "team2Id";
+            updateStat = "team2stat";
+          }
+
+        await queryAsync(
+          `UPDATE matches SET ${updateField} = ?, ${updateStat} = ? WHERE matchId = ?`,
+          [loserTeamId, 'loser', loser_next_match_id]
+        );
+      }
+    }
+
+    // Check for champion
+    const champion = await checkForChampion(winnerTeamId, loserTeamId, match);
+    if (champion) {
+      return { success: 1, message: "Champion decided", champion };
+    }
+
+    return {
+      success: 1,
+      message: "Winner set and progression updated successfully.",
+    };
+  } catch (error) {
+    console.error(error);
+    return {
+      success: 0,
+      message: "An error occurred while updating the winner.",
+    };
+  }
+};
 
 module.exports = {
   generateDoubleEliminationMatches,
@@ -640,5 +1009,6 @@ module.exports = {
   generateRoundRobinMatches,
   setTeamInNextMatch,
   checkForChampion,
-  updateTeamStanding
+  updateTeamStanding,
+  doubleSetWinner
 };

@@ -4,7 +4,8 @@ import Marquee from "react-fast-marquee";
 import useSportEventHooks, {
   SportEventInformationProps,
 } from "./useSportEventHooks";
-import AdminMatchForm from "../../../components/form/Matchmaking";
+import SingleElimForm from "../../../components/form/SingleElimForm";
+import DoubleElimForm from "../../../components/form/DoubleElimForm";
 import MainBracket from "../../../components/brackets/mainBracket";
 import { useNavigate } from "react-router-dom";
 
@@ -101,10 +102,19 @@ const SportEventInformation: React.FC<SportEventInformationProps> = ({
         width={900}
         centered
       >
-        <AdminMatchForm
-          sportDetails={sportDetails}
-          teams={sportDetails.teams}
-        />
+        {sportDetails.bracketType === "Single Elimination" ? (
+          <SingleElimForm
+            sportDetails={sportDetails}
+            teams={sportDetails.teams}
+            onClose={handleCloseModal}
+          />
+        ) : sportDetails.bracketType === "Double Elimination" ? (
+          <DoubleElimForm
+            sportDetails={sportDetails}
+            teams={sportDetails.teams}
+            onClose={handleCloseModal}
+          />
+        ) : null}
       </Modal>
     </div>
   );

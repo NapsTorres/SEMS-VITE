@@ -5,6 +5,7 @@ const {
   setTeamInNextMatch,
   checkForChampion,
   updateTeamStanding,
+  doubleSetWinner,
 } = require("../../helpers/brackets.js");
 const {
   getSportsEventsWithDetails,
@@ -294,72 +295,9 @@ module.exports = {
   },
 
   doubleSetWinner: async (data) => {
-    const { team1Score, team2Score, matchId } = data;
-  
     try {
-      const matchResult = await queryAsync(
-        "SELECT * FROM matches WHERE matchId = ?",
-        [matchId]
-      );
-      if (matchResult.length === 0)
-        return { success: 0, message: "Match not found" };
-  
-      const match = matchResult[0];
-      const {
-        team1Id,
-        team2Id,
-        bracketType,
-        next_match_id,
-        loser_next_match_id,
-        sportEventsId,
-        isFinal,
-      } = match;
-  
-      let winnerTeamId, loserTeamId;
-      if (team1Score > team2Score) {
-        winnerTeamId = team1Id;
-        loserTeamId = team2Id;
-      } else if (team2Score > team1Score) {
-        winnerTeamId = team2Id;
-        loserTeamId = team1Id;
-      } else {
-        return {
-          success: 0,
-          message: "Scores cannot be equal in elimination matches.",
-        };
-      }
-  
-      await queryAsync(
-        "UPDATE matches SET team1Score = ?, team2Score = ?, winner_team_id = ?, status = 'completed' WHERE matchId = ?",
-        [team1Score, team2Score, winnerTeamId, matchId]
-      );
-  
-      await updateTeamStanding(winnerTeamId, loserTeamId,sportEventsId);
-  
-      if (next_match_id) {
-        console.log(`Updating winner to next match: ${next_match_id}`);
-        if(bracketType === 'winners'){
-          await setTeamInNextMatch(next_match_id, winnerTeamId,'winnerBracket');
-        } else {
-          await setTeamInNextMatch(next_match_id, winnerTeamId,'loserBracket');
-        }
-      }
-  
-      if (loser_next_match_id) {
-        console.log(`Updating loser to next match: ${loser_next_match_id}`);
-        await setTeamInNextMatch(loser_next_match_id, loserTeamId,'loser');
-      }
-  
-      
-      const champion = await checkForChampion(winnerTeamId, loserTeamId, match);
-      if (champion) {
-        return { success: 1, message: "Champion decided", champion };
-      }
-  
-      return {
-        success: 1,
-        message: "Winner set and progression updated successfully.",
-      };
+      const result = await doubleSetWinner(data);
+      return result;
     } catch (error) {
       console.error(error);
       return {
