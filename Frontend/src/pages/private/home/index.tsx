@@ -12,7 +12,21 @@ export const AdminDashboard: React.FC = () => {
     ["summary"],
     [() => SportsServices.fetchSportsSummary()]
   );
-  const [selectedEvent, setSelectedEvent] = useState("");
+
+  // Initialize selectedEvent from localStorage
+  const getInitialEvent = () => {
+    const saved = localStorage.getItem('dashboard_selectedEvent');
+    return saved || "";
+  };
+
+  const [selectedEvent, setSelectedEvent] = useState(getInitialEvent);
+
+  // Save to localStorage whenever selectedEvent changes
+  const handleEventChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const value = e.target.value;
+    setSelectedEvent(value);
+    localStorage.setItem('dashboard_selectedEvent', value);
+  };
 
   if (isPending) {
     return <p className="text-center text-gray-500 mt-10">Loading...</p>;
@@ -25,16 +39,15 @@ export const AdminDashboard: React.FC = () => {
   const selectedEventData = summary?.events?.find(
     (event: any) => event.eventId === parseInt(selectedEvent)
   );
-  console.log(selectedEventData?.sportEvents)
   return (
     <div className="p-6 min-h-screen">
       {/* Header Section */}
-      <div className="w-full flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-semibold">Admin Dashboard</h1>
+      <div className="flex justify-between items-center mb-4">
+        <h1 className="text-2xl font-bold text-gray-800">Admin Dashboard</h1>
         <select
-          className="min-w-40 p-2 rounded-md shadow-md cursor-pointer"
+          className="min-w-40 p-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
           value={selectedEvent}
-          onChange={(e) => setSelectedEvent(e.target.value)}
+          onChange={handleEventChange}
         >
           <option value="">Select an Event</option>
           {summary?.events?.map((event: any) => (
@@ -169,12 +182,9 @@ export const AdminDashboard: React.FC = () => {
                           team.players.map((player: any) => (
                             <li
                               key={player.playerId}
-                              className="text-sm text-gray-600 flex justify-between"
+                              className="text-sm text-gray-600"
                             >
-                              <span>{player.playerName}</span>
-                              <span className="italic text-gray-500">
-                                {player.position}
-                              </span>
+                              {player.playerName}
                             </li>
                           ))
                         ) : (
@@ -186,8 +196,12 @@ export const AdminDashboard: React.FC = () => {
                     </div>
 
                     {/* Call to Action */}
-                    <div className="mt-6 text-center">
-                      <button onClick={() =>navigate(`/Teams/${team.teamId}`)} className="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
+                    <div className="mt-6 flex justify-end">
+                      <button 
+                        onClick={() =>navigate(`/Teams/${team.teamId}`)} 
+                        className="px-4 py-2 text-sm text-white rounded-lg transition"
+                        style={{ backgroundColor: '#064518' }}
+                      >
                         View Team Details
                       </button>
                     </div>

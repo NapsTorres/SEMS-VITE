@@ -151,9 +151,9 @@ module.exports = {
                       SELECT GROUP_CONCAT(DISTINCT
                         CONCAT(
                           '{"playerId":', p.playerId,
-                          ',"playerName":"', REPLACE(p.playerName, '"', '\"'), '",',
-                          '"position":"', REPLACE(p.position, '"', '\"'), '",',
-                          '"medicalCertificate":"', REPLACE(p.medicalCertificate, '"', '\"'), '"}'
+                          ',"playerName":"', REPLACE(p.playerName, '"', '"'), '",',
+                          '"status":"', REPLACE(p.status, '"', '"'), '",',
+                          '"medicalCertificate":"', REPLACE(p.medicalCertificate, '"', '"'), '"}'
                         )
                       )
                       FROM players p 

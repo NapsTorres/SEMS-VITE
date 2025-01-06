@@ -779,8 +779,12 @@ async function checkForChampion(winnerTeamId, loserTeamId, match) {
   ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `;
 
+  // Update standings for final matches
+  if (match.isFinal && match.status === "completed") {
+    await updateTeamStanding(winnerTeamId, loserTeamId, match.sportEventsId);
+  }
+
   if (match.isFinal && match.bracketType === "final") {
-    console.log('checking')
     if (loserTeamId && ((match.team1stat === "winnerBracket" && match.team1Id === loserTeamId) ||
     (match.team2stat === "winnerBracket" && match.team2Id === loserTeamId))) {
       const [existingResetMatch] = await db
@@ -790,21 +794,15 @@ async function checkForChampion(winnerTeamId, loserTeamId, match) {
         [match.next_match_id]
       );
     
-
       if (existingResetMatch.length > 0) {
-
         const resetMatch = existingResetMatch[0];
         if (
           (match.team1stat === "winnerBracket" && match.team1Id === loserTeamId) ||
           (match.team2stat === "winnerBracket" && match.team2Id === loserTeamId)
         ) {
-          console.log('here',loserTeamId)
           await db.promise().query(
             "UPDATE matches SET team2Id = ? WHERE matchId = ?",
             [loserTeamId, resetMatch.matchId]
-          );
-          console.log(
-            `Updated team2Id in reset match (ID: ${resetMatch.matchId}) with team from Winner Bracket.`
           );
         }
       } else {
@@ -830,8 +828,6 @@ async function checkForChampion(winnerTeamId, loserTeamId, match) {
             "UPDATE matches SET loser_next_match_id = ? WHERE matchId = ?",
             [resetMatchId, match.matchId]
           );
-
-        console.log(`Reset match created with ID: ${resetMatchId}`);
       }
     } else {
       return winnerTeamId; 
@@ -908,7 +904,10 @@ const doubleSetWinner = async (data) => {
       [team1Score, team2Score, winnerTeamId, matchId]
     );
 
-    await updateTeamStanding(winnerTeamId, loserTeamId, sportEventsId);
+    // Update standings only for non-final matches
+    if (!match.isFinal) {
+      await updateTeamStanding(winnerTeamId, loserTeamId, sportEventsId);
+    }
 
     // Handle winner progression (similar to single elimination)
     if (next_match_id) {

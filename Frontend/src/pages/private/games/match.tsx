@@ -93,19 +93,22 @@ export const MatchScoring = () => {
               <div className="flex gap-2 justify-center mt-2">
                 <Button
                   onClick={() => handleScoreChange("team1", 1)}
-                  className="bg-blue-600 text-white rounded-md"
+                  className="text-white rounded-md"
+                  style={{ backgroundColor: '#064518', borderColor: '#064518', color: 'white' }}
                 >
                   +1
                 </Button>
                 <Button
                   onClick={() => handleScoreChange("team1", 2)}
-                  className="bg-blue-600 text-white rounded-md"
+                  className="text-white rounded-md"
+                  style={{ backgroundColor: '#064518', borderColor: '#064518', color: 'white' }}
                 >
                   +2
                 </Button>
                 <Button
                   onClick={() => handleScoreChange("team1", 3)}
-                  className="bg-blue-600 text-white rounded-md"
+                  className="text-white rounded-md"
+                  style={{ backgroundColor: '#064518', borderColor: '#064518', color: 'white' }}
                 >
                   +3
                 </Button>
@@ -126,19 +129,22 @@ export const MatchScoring = () => {
               <div className="flex gap-2 justify-center mt-2">
                 <Button
                   onClick={() => handleScoreChange("team2", 1)}
-                  className="bg-green-600 text-white rounded-md"
+                  className="text-white rounded-md"
+                  style={{ backgroundColor: '#064518', borderColor: '#064518', color: 'white' }}
                 >
                   +1
                 </Button>
                 <Button
                   onClick={() => handleScoreChange("team2", 2)}
-                  className="bg-green-600 text-white rounded-md"
+                  className="text-white rounded-md"
+                  style={{ backgroundColor: '#064518', borderColor: '#064518', color: 'white' }}
                 >
                   +2
                 </Button>
                 <Button
                   onClick={() => handleScoreChange("team2", 3)}
-                  className="bg-green-600 text-white rounded-md"
+                  className="text-white rounded-md"
+                  style={{ backgroundColor: '#064518', borderColor: '#064518', color: 'white' }}
                 >
                   +3
                 </Button>
@@ -201,7 +207,8 @@ export const MatchScoring = () => {
           block
           onClick={() => setIsModalVisible(true)}
           disabled={isCompleted}
-          className="bg-blue-600 hover:bg-blue-700 rounded-md"
+          className="rounded-md"
+          style={{ backgroundColor: '#064518', borderColor: '#064518', color: 'white' }}
         >
           Save Changes
         </Button>

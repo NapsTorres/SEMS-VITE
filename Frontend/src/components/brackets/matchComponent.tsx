@@ -11,8 +11,6 @@ interface MatchComponentProps {
 }
 
 const MatchComponent: React.FC<MatchComponentProps> = ({ match, findTeamById }) => {
-  console.log(match);
-
   return (
     <div className="grid grid-cols-1 gap-x-6 grid-rows-6">
       {match.schedule && (

@@ -13,6 +13,8 @@ export default function useCoach() {
   const coachId = coach.info?.id;
   const queryClient = useQueryClient();
   const [isModalVisible, setIsModalVisible] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [selectedPlayer, setSelectedPlayer] = useState<any>(null);
   const [form] = Form.useForm();
   const [fileList, setFileList] = useState<any[]>([]);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
@@ -23,11 +25,28 @@ export default function useCoach() {
     [() => UserServices.fetchCoach(coachId)]
   );
 
-  const { addPlayerMutation,deletePlayerMutation,isLoading } = useTeamsRequest({});
+  const { addPlayerMutation, deletePlayerMutation, updatePlayerMutation, isLoading } = useTeamsRequest({});
 
   const showAddPlayerModal = (sportEventId: number) => {
+    setIsEditMode(false);
+    setSelectedPlayer(null);
     setCurrentSportEventId(sportEventId);
     setIsModalVisible(true);
+    form.resetFields();
+    setFileList([]);
+    setPreviewImage(null);
+  };
+
+  const showEditPlayerModal = (player: any) => {
+    setIsEditMode(true);
+    setSelectedPlayer(player);
+    setIsModalVisible(true);
+    form.setFieldsValue({
+      playerName: player.playerName
+    });
+    if (player.medicalCertificate) {
+      setPreviewImage(player.medicalCertificate);
+    }
   };
 
   const handleFileChange = (info: any) => {
@@ -68,6 +87,32 @@ export default function useCoach() {
         },
       });
   }
+
+  const handleUpdatePlayer = async(values:any) =>{
+    if (!selectedPlayer) return;
+    const formData = new FormData();
+    Object.keys(values).forEach((key) => {
+        const value = values[key as keyof typeof values];
+        if (key === "medicalCertificate" && value?.length > 0) {
+          formData.append(key, value[0]?.originFileObj);
+        } else {
+          formData.append(key, value !== null ? String(value) : "");
+        }
+      });
+    formData.append('playerId', selectedPlayer.playerId.toString());
+    updatePlayerMutation(formData, {
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["coach"] });
+            setIsModalVisible(false)
+            setFileList([])
+            setPreviewImage(null)
+            form.resetFields()
+            setSelectedPlayer(null);
+            setIsEditMode(false);
+        },
+      });
+  }
+
   const handleDeletePlayerTeam = async(playerId:any) =>{
     if (!playerId) return;
     deletePlayerMutation(playerId, {
@@ -80,19 +125,26 @@ export default function useCoach() {
     setFileList([])
     setPreviewImage(null)
     form.resetFields()
+    setSelectedPlayer(null);
+    setIsEditMode(false);
   }
+
   return {
     Info:Info?.length > 0 ? Info[0] : {},
     loading: isPending,
     isLoading,
     currentSportEventId,
     isModalVisible,
+    isEditMode,
+    selectedPlayer,
     form,
     fileList,
     previewImage,
     setCurrentSportEventId,
     handleAddPlayerTeam,
+    handleUpdatePlayer,
     showAddPlayerModal,
+    showEditPlayerModal,
     setIsModalVisible,
     handleDeletePlayerTeam,
     handleFileChange,

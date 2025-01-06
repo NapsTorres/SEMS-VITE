@@ -1,20 +1,134 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { useState, useMemo, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useFetchData } from "../../../config/axios/requestData";
 import TeamsServices from "../../../config/service/teams";
 import { dateStringFormatter } from "../../../utility/utils";
 import { FaTrophy, FaUsers } from "react-icons/fa";
 import { MdEvent } from "react-icons/md";
+import { Button, notification, Tooltip, Select } from "antd";
+import { CheckCircleOutlined, CloseCircleOutlined, ArrowLeftOutlined } from '@ant-design/icons';
+import useStore from "../../../zustand/store/store";
+import { selector } from "../../../zustand/store/store.provider";
+import { useQueryClient } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
+
+const { Option } = Select;
 
 export const TeamInfo = () => {
-    const navigate = useNavigate()
+  const navigate = useNavigate()
   const { teamId } = useParams();
+
+  // Get filters from localStorage or use defaults
+  const getInitialFilter = (key: string) => {
+    const saved = localStorage.getItem(`teamInfo_${key}`);
+    return saved || "all";
+  };
+
+  const [selectedEvent, setSelectedEvent] = useState(getInitialFilter('event'));
+  const [selectedSport, setSelectedSport] = useState(getInitialFilter('sport'));
+
+  // Save filters to localStorage whenever they change
+  useEffect(() => {
+    localStorage.setItem('teamInfo_event', selectedEvent);
+    localStorage.setItem('teamInfo_sport', selectedSport);
+  }, [selectedEvent, selectedSport]);
+
   const {
     data: [teamData] = [],
     isPending: isFetchingTeams,
-  } = useFetchData(["teams"], [
+  } = useFetchData(["team-info", teamId], [
     () => TeamsServices.fetchTeamInfo(teamId),
   ]);
+
+  const admin = useStore(selector("admin"));
+  const queryClient = useQueryClient();
+
+  // Create memoized lists of unique events and sports
+  const filterOptions = useMemo(() => {
+    if (!teamData?.events) return {
+      eventOptions: [{ value: 'all', label: 'All Events' }],
+      sportOptions: [{ value: 'all', label: 'All Sports' }]
+    };
+
+    const availableEvents = [...new Set(teamData.events.map((event: any) => event.eventName))];
+    
+    // Filter sports based on selected event
+    const availableSports = [...new Set(teamData.events
+      .filter((event: any) => selectedEvent === 'all' || event.eventName === selectedEvent)
+      .flatMap((event: any) => event.sportEvents.map((sport: any) => sport.sportsName)))];
+
+    return {
+      eventOptions: [
+        { value: 'all', label: 'All Events' },
+        ...availableEvents.map(eventName => ({
+          value: eventName,
+          label: eventName
+        }))
+      ],
+      sportOptions: [
+        { value: 'all', label: 'All Sports' },
+        ...availableSports.map(sportName => ({
+          value: sportName,
+          label: sportName
+        }))
+      ]
+    };
+  }, [teamData, selectedEvent]);
+
+  // Filter events based on selection
+  const filteredEvents = useMemo(() => {
+    if (!teamData?.events) return [];
+    let filtered = teamData.events;
+
+    if (selectedEvent !== 'all') {
+      filtered = filtered.filter((event: any) => event.eventName === selectedEvent);
+    }
+
+    return filtered.map((event: any) => ({
+      ...event,
+      sportEvents: event.sportEvents.filter((sport: any) =>
+        selectedSport === 'all' || sport.sportsName === selectedSport
+      )
+    })).filter((event: any) => event.sportEvents.length > 0);
+  }, [teamData, selectedEvent, selectedSport]);
+
+  const handleEventChange = (value: string) => {
+    setSelectedEvent(value);
+    if (value === 'all') {
+      setSelectedSport('all');
+    }
+  };
+
+  const handleSportChange = (value: string) => {
+    setSelectedSport(value);
+  };
+
+  const updatePlayerStatusMutation = useMutation({
+    mutationFn: TeamsServices.updatePlayerStatus,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["team-info", teamId] });
+      notification.success({
+        message: "Success",
+        description: "Player status updated successfully"
+      });
+    },
+    onError: (error: any) => {
+      notification.error({
+        message: "Error",
+        description: error.message || "Failed to update player status"
+      });
+    }
+  });
+
+  const handleUpdateStatus = async (playerId: number, status: string) => {
+    const formData = new FormData();
+    formData.append('playerId', playerId.toString());
+    formData.append('status', status);
+    formData.append('updatedBy', admin.info.id);
+
+    updatePlayerStatusMutation.mutate(formData);
+  };
 
   if (isFetchingTeams) {
     return <p className="text-gray-600 text-center mt-10">Loading...</p>;
@@ -24,31 +138,54 @@ export const TeamInfo = () => {
     return <p className="text-red-500 text-center mt-10">Team information not found.</p>;
   }
 
-  const { team, events } = teamData;
+  const { team } = teamData;
 
   return (
     <div className="p-6 bg-gray-100 min-h-screen">
-      {/* Team Details */}
-      <button
-        onClick={() => navigate(-1)} // Navigate back
-        className="flex items-center mb-6 px-4 py-2 bg-blue-500 text-white font-semibold rounded shadow hover:bg-blue-600"
-      >
-        <svg
-          className="w-5 h-5 mr-2"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-          xmlns="http://www.w3.org/2000/svg"
+      {/* Back Button and Filters */}
+      <div className="flex flex-col space-y-4 mb-6">
+        <button
+          onClick={() => navigate(-1)}
+          className="flex items-center px-4 py-2 text-white font-semibold rounded shadow transition-colors w-fit"
+          style={{ backgroundColor: '#064518' }}
         >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M15 19l-7-7 7-7"
-          />
-        </svg>
-        Back
-      </button>
+          <ArrowLeftOutlined className="mr-2" />
+          Back
+        </button>
+
+        <div className="flex justify-center gap-4">
+          <Select
+            value={selectedEvent}
+            onChange={handleEventChange}
+            style={{ width: 200 }}
+            placeholder="Filter by Event"
+            className="rounded-full"
+          >
+            {filterOptions.eventOptions.map((option: any) => (
+              <Option key={option.value} value={option.value}>
+                {option.label}
+              </Option>
+            ))}
+          </Select>
+
+          <Select
+            value={selectedSport}
+            onChange={handleSportChange}
+            style={{ width: 200 }}
+            placeholder="Filter by Sport"
+            className="rounded-full"
+            disabled={selectedEvent === 'all'}
+          >
+            {filterOptions.sportOptions.map((option: any) => (
+              <Option key={option.value} value={option.value}>
+                {option.label}
+              </Option>
+            ))}
+          </Select>
+        </div>
+      </div>
+
+      {/* Team Details */}
       <div className="bg-white shadow-lg rounded-lg p-6 mb-8">
         <div className="flex items-center space-x-6">
           <img
@@ -68,8 +205,8 @@ export const TeamInfo = () => {
         </div>
       </div>
 
-      {/* Events Section */}
-      {events?.map((event: any) => (
+      {/* Events Section - Now using filteredEvents */}
+      {filteredEvents.map((event: any) => (
         <div
           key={event.eventsId}
           className="bg-white shadow-md rounded-lg p-6 mb-8"
@@ -123,48 +260,81 @@ export const TeamInfo = () => {
               </p>
 
               {/* Players Table */}
-              <div className="overflow-x-auto">
-                <table className="table-auto w-full text-left border border-gray-300 rounded-md">
-                  <thead>
-                    <tr className="bg-gray-200">
-                      <th className="px-4 py-3 text-sm font-semibold text-gray-700">
-                        Player Name
-                      </th>
-                      <th className="px-4 py-3 text-sm font-semibold text-gray-700">
-                        Position
-                      </th>
-                      <th className="px-4 py-3 text-sm font-semibold text-gray-700">
-                        Medical Certificate
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {sportEvent.players.map((player: any) => (
-                      <tr
-                        key={player.playerId}
-                        className="border-t hover:bg-gray-100"
-                      >
-                        <td className="px-4 py-2 text-sm text-gray-800 flex items-center">
-                          <FaUsers className="text-gray-400 mr-2" />
-                          {player.playerName}
-                        </td>
-                        <td className="px-4 py-2 text-sm text-gray-800">
-                          {player.position}
-                        </td>
-                        <td className="px-4 py-2">
-                          <a
-                            href={player.medicalCertificate}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-blue-500 text-sm hover:underline"
-                          >
-                            View Certificate
-                          </a>
-                        </td>
+              <div className="mt-4 border rounded-lg bg-white shadow">
+                <div className="overflow-x-auto" style={{ minHeight: '200px', maxHeight: '400px' }}>
+                  <table className="w-full table-auto border-collapse">
+                    <thead className="bg-gray-50 sticky top-0">
+                      <tr>
+                        <th className="px-4 py-3 text-sm font-semibold text-gray-700 text-left w-1/4">
+                          Player Name
+                        </th>
+                        <th className="px-4 py-3 text-sm font-semibold text-gray-700 text-left w-1/4">
+                          Medical Certificate
+                        </th>
+                        <th className="px-4 py-3 text-sm font-semibold text-gray-700 text-left w-1/4">
+                          Status
+                        </th>
+                        <th className="px-4 py-3 text-sm font-semibold text-gray-700 text-left w-1/4">
+                          Actions
+                        </th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody className="divide-y divide-gray-200">
+                      {sportEvent.players.map((player: any) => (
+                        <tr
+                          key={player.playerId}
+                          className="hover:bg-gray-50"
+                        >
+                          <td className="px-4 py-3 text-sm text-gray-800">
+                            <div className="flex items-center">
+                              <FaUsers className="text-gray-400 mr-2" />
+                              {player.playerName}
+                            </div>
+                          </td>
+                          <td className="px-4 py-3">
+                            <a
+                              href={player.medicalCertificate}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-blue-500 text-sm hover:underline"
+                            >
+                              View Certificate
+                            </a>
+                          </td>
+                          <td className="px-4 py-3 text-sm">
+                            <span className={`${
+                              player.status === 'approved' ? 'text-green-600' :
+                              player.status === 'rejected' ? 'text-red-600' :
+                              'text-yellow-600'
+                            } font-semibold`}>
+                              {player.status?.charAt(0).toUpperCase() + player.status?.slice(1)}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3">
+                            <div className="flex space-x-2">
+                              <Tooltip title="Approve Player">
+                                <Button
+                                  type="text"
+                                  icon={<CheckCircleOutlined className={player.status === 'approved' ? 'text-gray-400' : 'text-green-600'} />}
+                                  onClick={() => handleUpdateStatus(player.playerId, 'approved')}
+                                  disabled={player.status === 'approved'}
+                                />
+                              </Tooltip>
+                              <Tooltip title="Reject Player">
+                                <Button
+                                  type="text"
+                                  icon={<CloseCircleOutlined className={player.status === 'rejected' ? 'text-gray-400' : 'text-red-600'} />}
+                                  onClick={() => handleUpdateStatus(player.playerId, 'rejected')}
+                                  disabled={player.status === 'rejected'}
+                                />
+                              </Tooltip>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
           ))}

@@ -49,7 +49,6 @@ module.exports = {
         LEFT JOIN users ua ON t.addedBy = ua.id -- Join for addedBy
         LEFT JOIN users uu ON t.updatedBy = uu.id -- Join for updatedBy
       `);
-      console.log(teamLists)
       return {
         success: 1,
         results: teamLists,
@@ -108,8 +107,8 @@ module.exports = {
         SELECT
           p.playerId,
           p.playerName,
-          p.position,
           p.medicalCertificate,
+          p.status,
           p.teamEventId
         FROM players p
         WHERE p.teamEventId IN (
@@ -223,14 +222,14 @@ module.exports = {
   },
   addPlayer: async (data) => {
     try {
-      const { playerName, position, medicalCertificate, teamEventId } = data;
+      const { playerName, medicalCertificate, teamEventId, addedBy } = data;
       const imageUrl = await uploadImage(
         medicalCertificate,
         medicalCertificate.originalname
       );
       await queryAsync(
-        "INSERT INTO players (teamEventId, playerName, position,medicalCertificate) VALUES (?, ?, ?,?)",
-        [teamEventId, playerName, position, imageUrl]
+        "INSERT INTO players (teamEventId, playerName, medicalCertificate, status, addedBy) VALUES (?, ?, ?, 'pending', ?)",
+        [teamEventId, playerName, imageUrl, addedBy]
       );
       return { success: 1, message: "Player added successfully" };
     } catch (error) {
@@ -262,4 +261,55 @@ module.exports = {
       };
     }
   },
+  updatePlayerStatus: async (data) => {
+    try {
+      const { playerId, status, updatedBy } = data;
+      
+      await queryAsync(
+        "UPDATE players SET status = ?, updatedBy = ?, updatedAt = CURRENT_TIMESTAMP WHERE playerId = ?",
+        [status, updatedBy, playerId]
+      );
+
+      return { success: 1, message: "Player status updated successfully" };
+    } catch (error) {
+      console.error("Error updating player status:", error);
+      return { success: 0, message: "Failed to update player status" };
+    }
+  },
+  updatePlayer: async (data) => {
+    try {
+      const { playerId, playerName, medicalCertificate, updatedBy } = data;
+      
+      // Check if player exists
+      const existingPlayer = await checkIfExists("players", "playerId", playerId);
+
+      let imageUrl = existingPlayer.medicalCertificate;
+      if (medicalCertificate) {
+        // Delete old image if exists and new one is provided
+        if (existingPlayer.medicalCertificate) {
+          await deleteImageByURL(existingPlayer.medicalCertificate);
+        }
+        // Upload new image
+        imageUrl = await uploadImage(medicalCertificate, medicalCertificate.originalname);
+      }
+
+      await queryAsync(
+        "UPDATE players SET playerName = ?, medicalCertificate = ?, updatedBy = ?, updatedAt = CURRENT_TIMESTAMP WHERE playerId = ?",
+        [playerName, imageUrl, updatedBy, playerId]
+      );
+
+      return { 
+        success: 1, 
+        message: "Player updated successfully",
+        results: {
+          playerId,
+          playerName,
+          medicalCertificate: imageUrl
+        }
+      };
+    } catch (error) {
+      console.error("Error updating player:", error);
+      return { success: 0, message: "Failed to update player" };
+    }
+  }
 };

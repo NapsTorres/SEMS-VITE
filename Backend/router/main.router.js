@@ -6,10 +6,10 @@ const gameRouter = require('./games.router')
 const mediaRouter = require('./media.router')
 
 module.exports = {
-    userRouter,
-    teamsRouter,
-    eventsRouter,
-    sportsRouter,
-    gameRouter,
-    mediaRouter
+    userRouter: userRouter,
+    teamsRouter: teamsRouter,
+    eventsRouter: eventsRouter,
+    sportsRouter: sportsRouter,
+    gameRouter: gameRouter,
+    mediaRouter: mediaRouter
 }

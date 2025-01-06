@@ -18,7 +18,6 @@ const RoundRobinBracket: React.FC<RoundRobinHooksProps> = ({ matches, teams }) =
       </h1>
       <div className="flex flex-col gap-8">
         {Object.keys(roundsMatch || [])?.map((roundKey) =>{ 
-          console.log(roundKey)
           return(
           <div
             key={roundKey}

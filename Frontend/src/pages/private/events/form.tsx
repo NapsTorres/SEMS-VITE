@@ -52,8 +52,13 @@ const EventsForm: React.FC<EventsFormProps> = ({
       <Form.Item label='Description' name='description'>
         <CustomTextEditor />
       </Form.Item>
-      <Form.Item>
-        <Button loading={loading} type="primary" htmlType="submit">
+      <Form.Item className="flex justify-end">
+        <Button 
+          loading={loading} 
+          type="primary" 
+          htmlType="submit"
+          style={{ backgroundColor: '#064518' }}
+        >
           {editingEvents ? 'Update' : 'Add'}
         </Button>
       </Form.Item>

@@ -10,7 +10,9 @@ const TeamsServices = {
   editTeams: async (data:any) => await axiosInstance.put(`${Api.TEAMS().EDIT}/${data?.get('teamId')}`,data),
   deleteTeams: async (teamId:any) => await axiosInstance.delete(`${Api.TEAMS().DELETE}/${teamId}`),
   fetchTeamInfo: async (teamId:any) => await axiosInstance.get(`${Api.TEAMS().INFO}/${teamId}`),
-  deletePlayer: async (playerId:any) => await axiosInstance.delete(`${Api.TEAMS().DELETEPLAYER}/${playerId}`)
+  deletePlayer: async (playerId:any) => await axiosInstance.delete(`${Api.TEAMS().DELETEPLAYER}/${playerId}`),
+  updatePlayerStatus: async (data: any) => await axiosInstance.post(`${Api.TEAMS().UPDATEPLAYERSTATUS}`, data),
+  updatePlayer: async (data: any) => await axiosInstance.post(Api.TEAMS().EDIT_PLAYER, data)
 };
 
 export default TeamsServices;

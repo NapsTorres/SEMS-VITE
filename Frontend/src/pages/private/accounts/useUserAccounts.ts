@@ -34,7 +34,7 @@ export default function useUserAccounts() {
       () => TeamsServices.fetchTeams()
     ]
   );
-  console.log(accounts)
+
   const handleTypeChange = (type: string) => {
     setShowEventFields(type !== "Admin"); // Show fields only if type is not Admin
   };

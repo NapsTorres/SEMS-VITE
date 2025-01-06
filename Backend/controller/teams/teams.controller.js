@@ -1,7 +1,6 @@
 const { errorException } = require("../../helpers/errorException");
 const { handleResponse } = require("../../helpers/handleResponse");
-const { createTeams, fetchTeams, editTeam, deleteTeam, fetchCoaches, addPlayer, deletePlayer, fethcTeamInfo, fetchTeamInfo } = require("./teams.services");
-
+const { createTeams, fetchTeams, editTeam, deleteTeam, fetchCoaches, addPlayer, deletePlayer, fetchTeamInfo, updatePlayerStatus, updatePlayer } = require("./teams.services");
 
 module.exports = {
     AddTeam:(req,res) =>{
@@ -62,6 +61,26 @@ module.exports = {
         try {
             const data = req.params.playerId;
             handleResponse(res, deletePlayer(data))
+        } catch (error) {
+            errorException(error,res)
+        }
+    },
+    UpdatePlayer:(req,res) =>{
+        try {
+            const data = req.body;
+            if(req.file){
+                const file = req.file;
+                data.medicalCertificate = file;
+            }
+            handleResponse(res, updatePlayer(data))
+        } catch (error) {
+            errorException(error,res)
+        }
+    },
+    UpdatePlayerStatus:(req,res) =>{
+        try {
+            const data = req.body;
+            handleResponse(res, updatePlayerStatus(data))
         } catch (error) {
             errorException(error,res)
         }

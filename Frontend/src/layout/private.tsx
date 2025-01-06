@@ -12,6 +12,7 @@ import { Outlet } from "react-router-dom";
 import { GrSchedules } from "react-icons/gr";
 import { FaTrophy } from "react-icons/fa";
 import { MdOutlinePermMedia } from "react-icons/md";
+import "../index.css";
 
 const { Header, Content, Sider } = Layout;
 
@@ -50,9 +51,9 @@ export default function Private() {
 
   return (
     <Layout style={{ minHeight: "100vh" }}>
-      <Header className="header" style={{ backgroundColor: "#001529", display: "flex", justifyContent: "space-between", alignItems: "center", padding: "0 20px" }}>
+      <Header className="header" style={{ backgroundColor: "#064518", display: "flex", justifyContent: "space-between", alignItems: "center", padding: "0 20px" }}>
         <div className="logo" style={{ color: "#fff", fontSize: "1.5rem" }}>
-          Sports Event Manager
+          Sports Event Management System
         </div>
         <Button type="primary" danger onClick={handleLogout}>
           Logout
@@ -66,6 +67,7 @@ export default function Private() {
             selectedKeys={[currentMenuKey]}
             onClick={handleMenuClick}
             style={{ height: "100%", borderRight: 0 }}
+            className="custom-menu"
           >
             {menuItems.map(({ key, icon, label }) => (
               <Menu.Item key={key} icon={icon}>
@@ -83,7 +85,7 @@ export default function Private() {
             </Breadcrumb.Item>
           </Breadcrumb>
 
-          <Content style={{ padding: 24, margin: 0, minHeight: 280, backgroundColor: "#fff" }}>
+          <Content style={{ padding: 24, margin: 0, minHeight: 280, backgroundColor: "#e9ece4" }}>
             <Outlet />
           </Content>
         </Layout>

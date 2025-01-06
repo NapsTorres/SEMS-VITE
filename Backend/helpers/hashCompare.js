@@ -7,19 +7,21 @@ const hashPassword = async (password) => {
       return hashedPassword;
     } catch (error) {
       console.error("Error hashing password:", error);
+      throw new Error("Failed to hash password");
     }
-  };
+};
   
-  const comparePassword = async (plainTextPassword, hashedPassword) => {
+const comparePassword = async (plainTextPassword, hashedPassword) => {
     try {
       const isMatch = await bcrypt.compare(plainTextPassword, hashedPassword);
       return isMatch;
     } catch (error) {
       console.error("Error comparing password:", error);
+      throw new Error("Failed to compare password");
     }
-  };
+};
 
-  module.exports ={
+module.exports = {
     hashPassword,
     comparePassword
-  }
+};

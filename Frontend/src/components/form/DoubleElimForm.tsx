@@ -49,16 +49,6 @@ const AdminMatchForm = ({
     const teamsInSecondRound = firstRoundMatches + numByes;
     const secondRoundMatches = Math.ceil(teamsInSecondRound / 2);
 
-    console.log({
-      totalTeams: teams.length,
-      nextPowerOfTwo,
-      numByes,
-      teamsInFirstRound,
-      firstRoundMatches,
-      teamsInSecondRound,
-      secondRoundMatches
-    });
-
     // Create first round matches
     const round1Matches = Array.from({ length: firstRoundMatches }, (_, i) => ({
       id: i + 1,

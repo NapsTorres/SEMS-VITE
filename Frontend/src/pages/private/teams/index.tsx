@@ -5,9 +5,10 @@ import { useNavigate } from "react-router-dom";
 import { Team } from "../../../types";
 import useTeamsHooks from "./useTeamsHooks";
 import TeamsForm from "./form";
-import { MdOutlineEdit, MdOutlineInfo } from "react-icons/md";
-import { AiOutlineDelete } from "react-icons/ai";
+import { MdOutlineInfo } from "react-icons/md";
 import { dateStringFormatter } from "../../../utility/utils";
+import { PlusOutlined } from "@ant-design/icons";
+import { EditOutlined, DeleteOutlined } from "@ant-design/icons";
 
 export const TeamsPage: React.FC = () => {
   const {
@@ -90,7 +91,7 @@ export const TeamsPage: React.FC = () => {
           <Tooltip title="Edit Team">
             <Button
               type="text"
-              icon={<MdOutlineEdit className="text-blue-500" />}
+              icon={<EditOutlined className="text-blue-500" />}
               onClick={() => showModal(record)}
             />
           </Tooltip>
@@ -103,7 +104,7 @@ export const TeamsPage: React.FC = () => {
             >
               <Button
                 type="text"
-                icon={<AiOutlineDelete className="text-red-500" />}
+                icon={<DeleteOutlined className="text-red-500" />}
               />
             </Popconfirm>
           </Tooltip>
@@ -126,7 +127,8 @@ export const TeamsPage: React.FC = () => {
         <Button
           type="primary"
           onClick={() => showModal()}
-          style={{ marginBottom: 16 }}
+          style={{ backgroundColor: '#064518', marginBottom: 16 }}
+          icon={<PlusOutlined />}
         >
           Add Team
         </Button>
@@ -135,12 +137,24 @@ export const TeamsPage: React.FC = () => {
       {/* Ensure teams is an array */}
       <Table
         columns={columns}
-        dataSource={Array.isArray(teams) ? teams : []} // Safely handle non-array cases
+        dataSource={Array.isArray(teams) ? teams : []}
         rowKey="teamId"
         loading={isFetchingTeams}
-        className="bg-white rounded-lg shadow-md"
+        className="shadow-lg rounded-lg overflow-hidden"
+        bordered
         locale={{
           emptyText: isFetchingTeams ? "Loading teams..." : "No teams available",
+        }}
+        pagination={{
+          pageSize: 10,
+          position: ["bottomRight"],
+          showSizeChanger: false,
+          className: "rounded-full",
+          showTotal: (total) => `Total ${total} teams`,
+          style: { marginRight: '16px' }
+        }}
+        style={{ 
+          border: '1px solid #d9d9d9',
         }}
       />
 

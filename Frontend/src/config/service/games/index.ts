@@ -7,6 +7,8 @@ const GamesServices = {
   scoreIncrement: async (data:any) => await axiosInstance.post(Api.GAMES().INCREMENT,data),
   gameStatus: async (data:any) => await axiosInstance.post(Api.GAMES().STATUS,data),
   gameMatchId: async (matchId:any) => await axiosInstance.get(`${Api.GAMES().ID}/${matchId}`),
+  updateSchedule: async (data: { matchId: string; schedule: string; venue: string }) => 
+    await axiosInstance.post(Api.EVENTS().SETSCHEDULE, data),
 };
 
 export default GamesServices;

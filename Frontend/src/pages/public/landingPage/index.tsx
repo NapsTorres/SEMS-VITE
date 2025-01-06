@@ -26,7 +26,7 @@ export const LandingPage = () => {
   );
 
   return (
-    <div className="bg-gray-100 min-h-screen relative overflow-hidden">
+    <div className="min-h-screen relative overflow-hidden" style={{ backgroundColor: '#e9ece4' }}>
       <HeaderComponents
         selected={selectedEventId}
         selectedSport={selectedSport}

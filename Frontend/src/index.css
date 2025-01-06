@@ -1,6 +1,21 @@
+/* Tailwind CSS directives */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Table styles */
+:where(.css-dev-only-do-not-override-ni1kz0).ant-table-wrapper .ant-table-cell {
+  border-right: 1px solid #d9d9d9 !important;
+}
+
+:where(.css-dev-only-do-not-override-ni1kz0).ant-table-wrapper .ant-table-thead > tr > th {
+  background-color: #caccc6 !important;
+  border-bottom: 2px solid #d9d9d9 !important;
+}
+
+:where(.css-dev-only-do-not-override-ni1kz0).ant-table-wrapper .ant-table-tbody > tr > td {
+  border-bottom: 1px solid #d9d9d9 !important;
+}
 
 /* Common bracket grid container for both Winner and Loser brackets */
 .bracket-grid {
@@ -195,3 +210,61 @@
   stroke: var(--swiper-theme-color);
 }
 
+.ant-layout-sider {
+  background-color: #f0a10f !important;
+}
+
+:where(.css-dev-only-do-not-override-ni1kz0).ant-menu-light, :where(.css-dev-only-do-not-override-ni1kz0).ant-menu-light > .ant-menu {
+  background: #caccc6 !important;
+}
+
+.custom-menu .ant-menu-item:hover {
+  color: #f8ba00 !important;
+  background-color: rgba(248, 186, 0, 0.1) !important;
+}
+
+.custom-menu .ant-menu-item:hover .anticon {
+  color: #f8ba00 !important;
+}
+
+.custom-menu .ant-menu-item-selected {
+  background-color: #f8ba00 !important;
+  color: white !important;
+}
+
+.custom-menu .ant-menu-item-selected .anticon {
+  color: white !important;
+}
+
+:where(.css-dev-only-do-not-override-ni1kz0).ant-btn-primary {
+  background-color: #064518 !important;
+  border-color: #064518 !important;
+}
+
+:where(.css-dev-only-do-not-override-ni1kz0).ant-btn-primary:hover {
+  background-color: #064518 !important;
+  border-color: #064518 !important;
+  opacity: 0.9;
+}
+
+:where(.css-dev-only-do-not-override-ni1kz0).ant-btn-primary.ant-btn-dangerous {
+  background-color: #ff4d4f !important;
+  border-color: #ff4d4f !important;
+}
+
+:where(.css-dev-only-do-not-override-ni1kz0).ant-btn-primary.ant-btn-dangerous:hover {
+  background-color: #ff7875 !important;
+  border-color: #ff7875 !important;
+}
+
+/* DatePicker OK button style */
+.ant-picker-ok .ant-btn-primary {
+  background-color: #064518 !important;
+  border-color: #064518 !important;
+  color: white !important;
+}
+
+.ant-picker-ok .ant-btn-primary:hover {
+  background-color: #0a5c22 !important;
+  border-color: #0a5c22 !important;
+}

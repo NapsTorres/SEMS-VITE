@@ -7,8 +7,6 @@ import { AnimatedComponent, createSlideInVariant } from "../animation";
 const { Title, Text } = Typography;
 
 const NewsSection: React.FC<{ news: any }> = ({ news }) => {
-  console.log(news);
-
   const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
 
   const handleToggle = (index: number) => {

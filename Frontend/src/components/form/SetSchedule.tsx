@@ -1,17 +1,18 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React from "react";
-import { Modal, DatePicker, Input, Typography } from "antd";
-import { CalendarOutlined, ClockCircleOutlined } from "@ant-design/icons";
+import { Modal, DatePicker, Input, Typography, Form } from "antd";
+import { CalendarOutlined, EnvironmentOutlined } from "@ant-design/icons";
 import moment from "moment";
 
 interface ScheduleModalProps {
   isModalVisible: boolean;
   schedule: string | null;
-  setSchedule: any;
+  setSchedule: (date: string) => void;
   venue: string;
-  setVenue: any;
+  setVenue: (venue: string) => void;
   handleScheduleSubmit: () => void;
   onCancel: () => void;
+  isSubmitting?: boolean;
 }
 
 const ScheduleModal: React.FC<ScheduleModalProps> = ({
@@ -22,58 +23,71 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
   setVenue,
   handleScheduleSubmit,
   onCancel,
+  isSubmitting = false,
 }) => {
+  const [form] = Form.useForm();
+
+  const handleSubmit = () => {
+    form.validateFields().then(() => {
+      handleScheduleSubmit();
+    });
+  };
+
   return (
     <Modal
       title={<span className="text-xl font-semibold">📅 Set Match Schedule</span>}
       open={isModalVisible}
-      onOk={handleScheduleSubmit}
+      onOk={handleSubmit}
       onCancel={onCancel}
       centered
       okText="Save Schedule"
       cancelText="Cancel"
-      okButtonProps={{ type: "primary", shape: "round" }}
+      confirmLoading={isSubmitting}
+      okButtonProps={{ 
+        type: "primary", 
+        shape: "round",
+        disabled: !schedule || !venue
+      }}
       cancelButtonProps={{ shape: "round" }}
       bodyStyle={{ padding: "20px" }}
       style={{ maxWidth: "400px" }}
     >
-      <Typography.Text type="secondary" className="block mb-4">
-        Select a date and time for the match.
-      </Typography.Text>
-      
-      <DatePicker
-        showTime={{ use12Hours: true, format: "hh:mm A" }}
-        format="DD/MM/YYYY hh:mm A"
-        className="w-full border rounded-lg shadow-sm"
-        placeholder="Select Date and Time"
-        suffixIcon={<CalendarOutlined />}
-        value={schedule ? moment(schedule) : null}
-        onChange={(date) => setSchedule(date ? date.toISOString() : null)}
-        style={{
-          padding: "10px",
-          fontSize: "16px",
-        }}
-        inputReadOnly
-      />
+      <Form form={form} layout="vertical">
+        <Typography.Text type="secondary" className="block mb-4">
+          Please set both the schedule and venue for the match.
+        </Typography.Text>
+        
+        <Form.Item
+          name="schedule"
+          label="Match Schedule"
+          rules={[{ required: true, message: 'Please select a schedule' }]}
+        >
+          <DatePicker
+            showTime={{ use12Hours: true, format: "hh:mm A" }}
+            format="YYYY-MM-DD HH:mm:ss"
+            className="w-full border rounded-lg shadow-sm"
+            placeholder="Select Date and Time"
+            suffixIcon={<CalendarOutlined />}
+            value={schedule ? moment(schedule) : null}
+            onChange={(date) => setSchedule(date ? date.format('YYYY-MM-DD HH:mm:ss') : '')}
+            disabledDate={(current) => current && current < moment().startOf('day')}
+          />
+        </Form.Item>
 
-      {schedule && (
-        <div className="mt-4 flex items-center text-gray-600">
-          <ClockCircleOutlined className="mr-2" />
-          <span className="font-medium">
-            Selected Date: {moment(schedule).format("MMMM Do YYYY, h:mm A")}
-          </span>
-        </div>
-      )}
-
-      <Typography.Text type="secondary" className="block mt-4 mb-2">
-        Venue
-      </Typography.Text>
-      <Input.TextArea
-        placeholder="Enter the venue"
-        value={venue}
-        onChange={(e) => setVenue(e.target.value)}
-        rows={3}
-      />
+        <Form.Item
+          name="venue"
+          label="Match Venue"
+          rules={[{ required: true, message: 'Please enter a venue' }]}
+        >
+          <Input
+            placeholder="Enter venue"
+            value={venue}
+            onChange={(e) => setVenue(e.target.value)}
+            prefix={<EnvironmentOutlined />}
+            className="rounded-lg"
+          />
+        </Form.Item>
+      </Form>
     </Modal>
   );
 };

@@ -3,11 +3,12 @@ const { Registration, Login, UserList, UpdateUser, CoachManagement } = require('
 const verifyToken = require('../middleware/verifyToken');
 
 const router = require('express').Router();
+const upload = multer();
 
-router.post('/registration', multer().none(),verifyToken, Registration)
-router.post('/login', multer().none(), Login)
-router.get('/list', multer().none(), UserList)
-router.post('/update', multer().none(),verifyToken, UpdateUser)
-router.get('/coach/:coachId', multer().none(), CoachManagement)
+router.post('/registration', upload.none(), verifyToken, Registration);
+router.post('/login', upload.none(), Login);
+router.get('/list', upload.none(), UserList);
+router.post('/update', upload.none(), verifyToken, UpdateUser);
+router.get('/coach/:coachId', upload.none(), CoachManagement);
 
-module.exports = router
+module.exports = router;

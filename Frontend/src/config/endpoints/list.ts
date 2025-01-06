@@ -17,6 +17,8 @@ const Api = {
     ADDPLAYER: ApiEndpoint(base + '/add-player'),
     DELETEPLAYER: ApiEndpoint(base + '/delete-player'),
     INFO: ApiEndpoint(base + '/info'),
+    UPDATEPLAYERSTATUS: ApiEndpoint(base + '/update-player-status'),
+    EDIT_PLAYER: ApiEndpoint(base + '/edit-player'),
   }),
   EVENTS:(base = '/events') => ({
     LIST: ApiEndpoint(base + '/list'),

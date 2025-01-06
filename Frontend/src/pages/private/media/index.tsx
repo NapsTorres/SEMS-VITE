@@ -42,7 +42,6 @@ export const MediaPage: React.FC = () => {
   };
 
   const confirmDelete = (mediaId: number) => {
-    console.log(mediaId)
     Modal.confirm({
       title: "Are you sure you want to delete this media?",
       content: "This action cannot be undone.",
@@ -63,9 +62,9 @@ export const MediaPage: React.FC = () => {
   }
   return (
     <div className="p-6 min-h-screen">
-      <Title level={2} className="text-gray-800 mb-8 text-center">
-        Media Gallery
-      </Title>
+      <div className="flex justify-center items-center mb-4">
+        <h1 className="text-2xl font-bold text-gray-800">Media Gallery</h1>
+      </div>
 
       <div className="flex justify-center my-8">
         <Button
@@ -73,6 +72,7 @@ export const MediaPage: React.FC = () => {
           icon={<UploadOutlined />}
           size="large"
           onClick={() => setIsModalVisible(true)}
+          style={{ backgroundColor: '#064518', borderColor: '#064518', color: 'white' }}
         >
           Upload Media
         </Button>
@@ -229,6 +229,7 @@ export const MediaPage: React.FC = () => {
               htmlType="submit"
               block
               loading={isFetchingMedia}
+              style={{ backgroundColor: '#064518', borderColor: '#064518', color: 'white' }}
             >
               Upload
             </Button>

@@ -17,7 +17,7 @@ export default function useGameResults() {
     const dateMatches = !dateFilter || new Date(match.schedule).toDateString() === new Date(dateFilter).toDateString();
     return statusMatches && roundMatches && dateMatches;
   }).sort((a: any, b: any) => new Date(b.schedule).getTime() - new Date(a.schedule).getTime());
-  console.log(filteredMatches)
+
   const paginatedMatches = filteredMatches?.slice(
     (currentPage - 1) * matchesPerPage,
     currentPage * matchesPerPage

@@ -77,8 +77,7 @@ export default function useGameScorig({ matchId }: { matchId?: any }) {
         });
       }
   }
-  console.log('match',MatchInfo)
-  console.log('match1',MatchInfo?.sportEvent?.bracketType)
+
   return {
     Match,
     isFetchingMatch: !Match,

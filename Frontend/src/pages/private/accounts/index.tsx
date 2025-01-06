@@ -1,7 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React from 'react';
-import { Table, Button, Modal, Form, Input, Select } from 'antd';
-import { PlusOutlined, EditOutlined } from '@ant-design/icons';
+import { Table, Button, Modal, Form, Input, Select, Tooltip } from 'antd';
+import { PlusOutlined } from '@ant-design/icons';
+import { EditOutlined } from "@ant-design/icons";
 import { User } from '../../../types';
 import useUserAccounts from './useUserAccounts';
 
@@ -17,7 +18,6 @@ export const UserAccounts: React.FC = () => {
     editingUser,
     isLoading,
     isModalVisible,
-    sportEvents,
     form,
   } = useUserAccounts();
 
@@ -32,21 +32,48 @@ export const UserAccounts: React.FC = () => {
       key: 'actions',
       render: (_: any, user: User) => (
         <div className="flex space-x-2">
-          <Button icon={<EditOutlined />} onClick={() => openModal(user)}>Edit</Button>
+          <Tooltip title="Edit User">
+            <Button 
+              type="text"
+              icon={<EditOutlined className="text-sky-600" />} 
+              onClick={() => openModal(user)}
+            />
+          </Tooltip>
         </div>
       ),
     },
   ];
   
-  
-  console.log(sportEvents)
   return (
     <div className="p-6">
       <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-semibold">User Accounts</h2>
-        <Button type="primary" icon={<PlusOutlined />} onClick={() => openModal()}>Add User</Button>
+        <h1 className="text-2xl font-bold text-gray-800">User Accounts</h1>
+        <Button 
+          type="primary" 
+          icon={<PlusOutlined />} 
+          onClick={() => openModal()}
+          style={{ backgroundColor: '#064518', marginBottom: 16 }}
+        >
+          Add User
+        </Button>
       </div>
-      <Table dataSource={accounts} columns={columns} rowKey="id" />
+      <Table 
+        dataSource={accounts} 
+        columns={columns} 
+        rowKey="id"
+        bordered
+        pagination={{
+          pageSize: 10,
+          position: ["bottomRight"],
+          showSizeChanger: false,
+          className: "rounded-full",
+          showTotal: (total) => `Total ${total} accounts`
+        }}
+        className="border rounded-lg overflow-hidden"
+        style={{ 
+          border: '1px solid #d9d9d9',
+        }}
+      />
 
       <Modal
         title={editingUser ? "Edit User" : "Add User"}
@@ -100,8 +127,13 @@ export const UserAccounts: React.FC = () => {
             </Select>
           </Form.Item>
 
-          <Form.Item>
-            <Button type="primary" loading={isLoading} htmlType="submit" className="w-full">
+          <Form.Item className="flex justify-end">
+            <Button 
+              type="primary" 
+              loading={isLoading} 
+              htmlType="submit" 
+              style={{ backgroundColor: '#064518' }}
+            >
               {editingUser ? 'Update User' : 'Add User'}
             </Button>
           </Form.Item>

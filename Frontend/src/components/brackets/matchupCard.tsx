@@ -28,8 +28,8 @@ const MatchCard: React.FC<MatchCardProps> = ({
     <div
       className={`row-span-7 flex flex-col justify-center gap-4 items-start rounded-lg p-6 shadow-md w-80 h-64 m-2 ${
         status === "completed"
-          ? "cursor-not-allowed bg-gray-200"
-          : "cursor-pointer hover:bg-gray-100"
+          ? "cursor-not-allowed bg-white"
+          : "cursor-pointer bg-white hover:bg-gray-50"
       }`}
     >
       <div className="text-gray-500 text-sm font-semibold">
@@ -49,14 +49,14 @@ const MatchCard: React.FC<MatchCardProps> = ({
           <div className="w-14 h-14 rounded-full bg-gray-300" />
         )}
         <p
-          className={`font-semibold text-start ${
-            !isTeam1Winner && status === "completed" ? " text-gray-400" : ""
+          className={`text-sm font-semibold text-start ${
+            !isTeam1Winner && status === "completed" ? "text-gray-400" : "text-gray-700"
           }`}
         >
           {team1 ? team1.teamName : "TBD"}
         </p>
         {team1Score !== undefined && (
-          <p className={`text-xl font-bold ${isTeam1Winner ? "text-green-500" : "text-gray-500"}`}>
+          <p className={`text-xl ${isTeam1Winner ? "text-green-500" : "text-gray-500"}`}>
             {team1Score}
           </p>
         )}
@@ -77,14 +77,14 @@ const MatchCard: React.FC<MatchCardProps> = ({
           <div className="w-14 h-14 rounded-full bg-gray-300" />
         )}
         <p
-          className={`font-semibold text-start ${
-            !isTeam2Winner && status === "completed" ? " text-gray-400" : ""
+          className={`text-sm font-semibold text-start ${
+            !isTeam2Winner && status === "completed" ? "text-gray-400" : "text-gray-700"
           }`}
         >
           {team2 ? team2.teamName : "TBD"}
         </p>
         {team2Score !== undefined && (
-          <p className={`text-xl font-bold ${isTeam2Winner ? "text-green-500" : "text-gray-500"}`}>
+          <p className={`text-xl ${isTeam2Winner ? "text-green-500" : "text-gray-500"}`}>
             {team2Score}
           </p>
         )}

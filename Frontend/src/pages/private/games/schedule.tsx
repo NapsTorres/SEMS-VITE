@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import {
   Button,
-  Pagination,
   Select,
   Spin,
   Table,
@@ -17,11 +16,10 @@ import { CiLocationOn } from "react-icons/ci";
 import moment from "moment";
 
 const { Option } = Select;
-const { Title, Text } = Typography;
+const { Text } = Typography;
 
 export const GameSchedule = () => {
   const {
-    Match,
     isFetchingMatch,
     paginatedMatches,
     venue,
@@ -31,22 +29,23 @@ export const GameSchedule = () => {
     currentPage,
     filteredMatches,
     matchesPerPage,
+    filterOptions,
     roundFilter,
-    statusFilter,
     dateFilter,
     eventFilter,
-    sportFilter, // Added states for event and sport filters
+    sportFilter,
     setScheduleModalVisible,
     handleScheduleSubmit,
-    setStatusFilter,
     setRoundFilter,
     setDateFilter,
-    setEventFilter, // Setter for event filter
-    setSportFilter, // Setter for sport filter
+    setEventFilter,
+    setSportFilter,
     openScheduleModal,
     handlePageChange,
     setSchedule,
     setVenue,
+    statusFilter,
+    setStatusFilter,
   } = useGameSchedule();
 
   const getStatusTag = (status: string) => {
@@ -140,23 +139,12 @@ export const GameSchedule = () => {
           onClick={() => openScheduleModal(record)}
           disabled={record.status === "completed" || record.status === "ongoing"}
           className="rounded-full"
+          style={{ backgroundColor: '#064518', borderColor: '#064518', color: 'white' }}
         >
           Schedule & Venue
         </Button>
       ),
     },
-  ];
-
-  // Extract unique Event Names and Sport Names
-  const uniqueEvents = [
-    ...new Map(
-      Match?.map((match: any) => [match.event.eventId, match.event.eventName])
-    ).values(),
-  ];
-  const uniqueSports = [
-    ...new Map(
-      Match?.map((match: any) => [match.sport.sportsId, match.sport.sportsName])
-    ).values(),
   ];
 
   if (isFetchingMatch) {
@@ -165,54 +153,38 @@ export const GameSchedule = () => {
 
   return (
     <div className="p-5">
-      <Title level={2} className="mb-4 text-center">
-        Game Schedule
-      </Title>
+      <div className="flex justify-center items-center mb-4">
+        <h1 className="text-2xl font-bold text-gray-800">Game Schedule</h1>
+      </div>
 
       {/* Filters */}
       <div className="flex gap-4 mb-4 justify-center">
         {/* Status Filter */}
         <Select
           value={statusFilter}
-          onChange={(value) => setStatusFilter(value)}
+          onChange={setStatusFilter}
           style={{ width: 200 }}
           placeholder="Filter by Status"
           className="rounded-full"
         >
           <Option value="all">All Statuses</Option>
-          <Option value="pending">Pending</Option>
+          <Option value="scheduled">Pending</Option>
           <Option value="ongoing">Ongoing</Option>
           <Option value="completed">Completed</Option>
-        </Select>
-
-        {/* Round Filter */}
-        <Select
-          value={roundFilter}
-          onChange={(value) => setRoundFilter(value)}
-          style={{ width: 200 }}
-          placeholder="Filter by Round"
-          className="rounded-full"
-        >
-          <Option value="all">All Rounds</Option>
-          {[...new Set(Match?.map((m: any) => m.round))].map((round) => (
-            <Option key={round} value={round.toString()}>
-              Round {round}
-            </Option>
-          ))}
         </Select>
 
         {/* Event Filter */}
         <Select
           value={eventFilter}
-          onChange={(value) => setEventFilter(value)}
+          onChange={setEventFilter}
           style={{ width: 200 }}
           placeholder="Filter by Event"
           className="rounded-full"
         >
           <Option value="all">All Events</Option>
-          {uniqueEvents.map((eventName) => (
-            <Option key={eventName} value={eventName}>
-              {eventName}
+          {filterOptions.events.map((eventName: unknown) => (
+            <Option key={eventName as string} value={eventName as string}>
+              {eventName as string}
             </Option>
           ))}
         </Select>
@@ -220,15 +192,32 @@ export const GameSchedule = () => {
         {/* Sport Filter */}
         <Select
           value={sportFilter}
-          onChange={(value) => setSportFilter(value)}
+          onChange={setSportFilter}
           style={{ width: 200 }}
           placeholder="Filter by Sport"
           className="rounded-full"
+          disabled={eventFilter === 'all'}
         >
           <Option value="all">All Sports</Option>
-          {uniqueSports.map((sportName) => (
-            <Option key={sportName} value={sportName}>
-              {sportName}
+          {filterOptions.sports.map((sportName: unknown) => (
+            <Option key={sportName as string} value={sportName as string}>
+              {sportName as string}
+            </Option>
+          ))}
+        </Select>
+
+        {/* Round Filter */}
+        <Select
+          value={roundFilter}
+          onChange={setRoundFilter}
+          style={{ width: 200 }}
+          placeholder="Filter by Round"
+          className="rounded-full"
+        >
+          <Option value="all">All Rounds</Option>
+          {filterOptions.rounds.map((round: unknown) => (
+            <Option key={round as number} value={(round as number).toString()}>
+              Round {round as number}
             </Option>
           ))}
         </Select>
@@ -236,7 +225,7 @@ export const GameSchedule = () => {
         {/* Date Filter */}
         <DatePicker
           value={dateFilter ? moment(dateFilter) : null}
-          onChange={(date) => setDateFilter(date ? date.toISOString() : null)}
+          onChange={(date) => setDateFilter(date ? date.format('YYYY-MM-DD') : null)}
           format="YYYY-MM-DD"
           placeholder="Filter by Date"
           size="middle"
@@ -247,23 +236,20 @@ export const GameSchedule = () => {
       <Table
         columns={columns}
         dataSource={paginatedMatches}
-        pagination={false}
+        pagination={{
+          current: currentPage,
+          pageSize: matchesPerPage,
+          total: filteredMatches?.length || 0,
+          onChange: handlePageChange,
+          showSizeChanger: false,
+          className: "rounded-full",
+          position: ["bottomRight"],
+          showTotal: (total) => `Total ${total} matches`
+        }}
         rowKey={(record: any) => record.matchId}
         bordered
         className="shadow-lg rounded-lg overflow-hidden"
       />
-
-      {/* Pagination */}
-      <div className="flex justify-center mt-6">
-        <Pagination
-          current={currentPage}
-          pageSize={matchesPerPage}
-          total={filteredMatches?.length || 0}
-          onChange={handlePageChange}
-          showSizeChanger={false}
-          className="rounded-full"
-        />
-      </div>
 
       {/* Schedule Modal */}
       {selectedMatch && (
@@ -273,7 +259,7 @@ export const GameSchedule = () => {
           setSchedule={setSchedule}
           venue={venue}
           setVenue={setVenue}
-          handleScheduleSubmit={handleScheduleSubmit}
+          handleScheduleSubmit={() => handleScheduleSubmit(selectedMatch)}
           onCancel={() => setScheduleModalVisible(false)}
         />
       )}

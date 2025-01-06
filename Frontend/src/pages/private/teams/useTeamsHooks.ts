@@ -8,6 +8,7 @@ import useTeamsRequest from "../../../config/data/teams";
 import { useQueryClient } from "@tanstack/react-query";
 import useStore from "../../../zustand/store/store";
 import { selector } from "../../../zustand/store/store.provider";
+import { useMutation } from "@tanstack/react-query";
 
 export default function useTeamsHooks() {
   const queryClient = useQueryClient();
@@ -28,12 +29,15 @@ export default function useTeamsHooks() {
     ]
   );
 
+  const updatePlayerStatusMutation = useMutation({
+    mutationFn: TeamsServices.updatePlayerStatus,
+  });
+
   const handleAddOrEditTeam = (values: Team) => {
     const formData = new FormData();
     if (!isImageUpdated && editingTeam?.teamLogo) {
       values.teamLogo = editingTeam.teamLogo;
     } else {
-        console.log(values.teamLogo)
       values.teamLogo = values.teamLogo.fileList?.map(
         (file: { originFileObj: any }) => file.originFileObj
       )[0];
@@ -79,7 +83,7 @@ export default function useTeamsHooks() {
     }
     setIsModalVisible(true);
   };
-  console.log(coaches)
+
   const loading = isLoading || isFetchingTeams;
   return {
     teams:teams || [],
@@ -94,5 +98,6 @@ export default function useTeamsHooks() {
     setIsModalVisible,
     handleDeleteTeam,
     showModal,
+    updatePlayerStatusMutation,
   };
 }

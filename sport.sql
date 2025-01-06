@@ -111,8 +111,12 @@ CREATE TABLE `players` (
   `playerId` int(11) NOT NULL,
   `teamEventId` int(11) DEFAULT NULL,
   `playerName` longtext NOT NULL,
-  `position` varchar(255) NOT NULL,
-  `medicalCertificate` longtext NOT NULL
+  `medicalCertificate` longtext NOT NULL,
+  `status` varchar(255) NOT NULL DEFAULT 'pending',
+  `addedBy` int(11) DEFAULT NULL,
+  `updatedBy` int(11) DEFAULT NULL,
+  `updatedAt` timestamp NULL DEFAULT NULL ON UPDATE current_timestamp(),
+  `createdAt` timestamp NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------

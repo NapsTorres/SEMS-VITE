@@ -50,30 +50,43 @@ export default function useTeamsRequest({
     });
   };
 
-  const { mutate: addTeamMutation, isPending: isAddingTeam } = createMutation(
+  const { mutate: addTeamMutation, isPending: isAddTeamLoading } = createMutation(
     TeamsServices.addTeams,
     "Successfully added new team"
   );
 
-  const { mutate: editTeamMutation, isPending: isEditingTeam } = createMutation(
+  const { mutate: editTeamMutation, isPending: isEditTeamLoading } = createMutation(
     TeamsServices.editTeams,
     "Successfully updated team info"
   );
 
-  const { mutate: deleteTeamMutation, isPending: isDeletingTeam } =
-    createMutation(TeamsServices.deleteTeams, "Successfully deleted team");
-  const { mutate: deletePlayerMutation, isPending: isDeletingPlayer } =
-    createMutation(TeamsServices.deletePlayer, "Successfully deleted player");
-  const { mutate: addPlayerMutation, isPending: isAddingPlayer } =
-    createMutation(TeamsServices.addPlayer, "Successfully Added Player");
+  const { mutate: deleteTeamMutation, isPending: isDeleteTeamLoading } = createMutation(
+    TeamsServices.deleteTeams,
+    "Successfully deleted team"
+  );
 
-  const isLoading = [
-    isAddingTeam,
-    isEditingTeam,
-    isDeletingTeam,
-    isAddingPlayer,
-    isDeletingPlayer,
-  ].some(Boolean);
+  const { mutate: addPlayerMutation, isPending: isAddPlayerLoading } = createMutation(
+    TeamsServices.addPlayer,
+    "Successfully added player"
+  );
+
+  const { mutate: deletePlayerMutation, isPending: isDeletePlayerLoading } = createMutation(
+    TeamsServices.deletePlayer,
+    "Successfully deleted player"
+  );
+
+  const { mutate: updatePlayerMutation, isPending: isUpdatePlayerLoading } = createMutation(
+    TeamsServices.updatePlayer,
+    "Successfully updated player"
+  );
+
+  const isLoading =
+    isAddTeamLoading ||
+    isEditTeamLoading ||
+    isDeleteTeamLoading ||
+    isAddPlayerLoading ||
+    isDeletePlayerLoading ||
+    isUpdatePlayerLoading;
 
   return {
     isLoading,
@@ -82,5 +95,6 @@ export default function useTeamsRequest({
     deleteTeamMutation,
     addPlayerMutation,
     deletePlayerMutation,
+    updatePlayerMutation,
   };
 }

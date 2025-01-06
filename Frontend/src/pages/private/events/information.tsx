@@ -33,7 +33,7 @@ const EventInformation = () => {
       setAllTeamsSelected(false);
     }
   };
-  console.log(teams)
+
   return (
     <>
       {selectedSport ? (
@@ -94,6 +94,7 @@ const EventInformation = () => {
                   type="primary"
                   size="large"
                   onClick={() => setIsModalVisible(true)}
+                  style={{ backgroundColor: '#064518', borderColor: '#064518', color: 'white' }}
                 >
                   Add Sport
                 </Button>
@@ -111,6 +112,7 @@ const EventInformation = () => {
         onOk={() => form.submit()}
         width={590}
         okText="Add Selected Sports and Teams"
+        okButtonProps={{ style: { backgroundColor: '#064518', borderColor: '#064518', color: 'white' } }}
       >
         <Form form={form} onFinish={handleAddSports} layout="vertical" name="sports">
           <Form.Item label="Sports to Add" name="selectedSports">

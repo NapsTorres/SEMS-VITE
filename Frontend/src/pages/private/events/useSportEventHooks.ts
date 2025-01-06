@@ -69,8 +69,6 @@ export default function useSportEventHooks({sportDetails}: SportEventInformation
             teamsToSend = values.map((team: Team) => ({ teamId: team.teamId }));
         }
         
-        console.log('Teams to send:', teamsToSend);
-        
         const formData = new FormData();
         formData.append('sportsId', sportDetails.sportsId);
         formData.append('sportEventsId', sportDetails.sportEventsId);

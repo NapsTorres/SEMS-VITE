@@ -1,8 +1,7 @@
 import useCoach from '../useCoach'
 
 export const CoachDashboard = () => {
-    const { Info } = useCoach()
-    console.log(Info)
+    const {} = useCoach()
   return (
     <div>
       

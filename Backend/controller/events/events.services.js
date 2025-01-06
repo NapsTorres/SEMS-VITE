@@ -200,7 +200,6 @@ module.exports = {
 
   bracketMatch: async (data) => {
     try {
-      console.log(data)
       const sportsId = data.sportEventsId;
       const res = await queryAsync(
         "SELECT * FROM brackets where sportsId = ?",
@@ -238,7 +237,7 @@ module.exports = {
       }
 
       const currentMatch = match[0];
-      const { team1Id, team2Id, next_match_id,sportEventsId } = currentMatch;
+      const { team1Id, team2Id, next_match_id, sportEventsId } = currentMatch;
 
       if (team1Score === undefined || team2Score === undefined) {
         return { success: 0, error: "Scores for both teams are required" };
@@ -264,13 +263,14 @@ module.exports = {
         [team1Score, team2Score, winnerId, matchId]
       );
 
+      // Always update standings regardless of next match
+      await updateTeamStanding(winnerId, loserId, sportEventsId);
+
       if (next_match_id) {
         const nextMatch = await queryAsync(
           "SELECT * FROM matches WHERE matchId = ?",
           [next_match_id]
         );
-
-        await updateTeamStanding(winnerId, loserId,sportEventsId);
 
         if (nextMatch.length > 0) {
           const nextMatchRecord = nextMatch[0];

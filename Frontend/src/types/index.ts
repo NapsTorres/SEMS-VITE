@@ -96,7 +96,12 @@ export interface User {
 export interface Player {
   playerId: number;
   playerName: string;
-  position: string;
+  medicalCertificate: string;
+  status: 'pending' | 'approved' | 'rejected';
+  addedBy?: number;
+  updatedBy?: number;
+  updatedAt?: string;
+  createdAt?: string;
 }
 
 export interface SportDetails {

@@ -3,41 +3,46 @@ const { handleResponse } = require("../../helpers/handleResponse");
 const { userRegistration, userLogin, updateUser, fetchUserList, coachHandle } = require("./user.services");
 
 module.exports = {
-  Registration: (req, res) => {
+  Registration: async (req, res) => {
     try {
       const data = req.body;
-      handleResponse(res, userRegistration(data));
+      const result = await userRegistration(data);
+      return handleResponse(res, result);
     } catch (error) {
       return errorException(error, res);
     }
   },
-  Login: (req, res) => {
+  Login: async (req, res) => {
     try {
       const data = req.body;
-      handleResponse(res, userLogin(data));
+      const result = await userLogin(data);
+      return handleResponse(res, result);
     } catch (error) {
       return errorException(error, res);
     }
   },
-  UserList: (req, res) => {
+  UserList: async (req, res) => {
     try {
-      handleResponse(res, fetchUserList());
+      const result = await fetchUserList();
+      return handleResponse(res, result);
     } catch (error) {
       return errorException(error, res);
     }
   },
-  UpdateUser: (req, res) => {
+  UpdateUser: async (req, res) => {
     try {
       const data = req.body;
-      handleResponse(res, updateUser(data));
+      const result = await updateUser(data);
+      return handleResponse(res, result);
     } catch (error) {
       return errorException(error, res);
     }
   },
-  CoachManagement:(req,res) =>{
+  CoachManagement: async (req, res) => {
     try {
-      const data = req.params.coachId;
-      handleResponse(res, coachHandle(data));
+      const { coachId } = req.params;
+      const result = await coachHandle(coachId);
+      return handleResponse(res, result);
     } catch (error) {
       return errorException(error, res);
     }

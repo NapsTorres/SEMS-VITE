@@ -89,34 +89,42 @@ const MatchSection: React.FC<{
               effect={"coverflow"}
               grabCursor={true}
               coverflowEffect={{
-                rotate: 50,
+                rotate: 30,
                 stretch: 0,
                 depth: 100,
-                modifier: 1,
+                modifier: 1.5,
                 slideShadows: true,
               }}
               slidesPerView={4}
               loop={true}
               autoplay={{
-                delay: 2500,
+                delay: 1000,
                 disableOnInteraction: false,
+                pauseOnMouseEnter: false,
               }}
+              speed={1000}
               centeredSlides={true}
               modules={[EffectCoverflow, Pagination, Autoplay]}
               className="mySwiper p-6"
+              initialSlide={0}
+              allowTouchMove={true}
             >
               {filteredTeams.length > 0 ? (
                 filteredTeams.map((team: any, index: number) => (
                   <SwiperSlide
                     key={index}
-                    className="flex flex-col items-center justify-center border bg-[linear-gradient(to_top,_#0ba360_0%,_#3cba92_100%)] p-4 rounded-md"
+                    className="flex flex-col items-center justify-center border bg-[linear-gradient(to_top,_#0ba360_0%,_#3cba92_100%)] p-4 rounded-md transition-all duration-300 hover:scale-105"
                   >
-                    <img
-                      className="w-40 rounded-full"
-                      src={team.teamLogo}
-                      alt={team.teamName}
-                    />
-                    <p className="text-white mt-2">{team.teamName}</p>
+                    <div className="flex flex-col items-center justify-center w-full">
+                      <img
+                        className="w-40 h-40 rounded-full object-cover transition-transform duration-300 hover:scale-110"
+                        src={team.teamLogo}
+                        alt={team.teamName}
+                      />
+                      <p className="text-white mt-4 text-center text-lg font-semibold px-4 w-full">
+                        {team.teamName}
+                      </p>
+                    </div>
                   </SwiperSlide>
                 ))
               ) : (

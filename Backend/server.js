@@ -16,7 +16,6 @@ const corsOptions = {
   app.use(cors(corsOptions));
 
   httpServer.listen(process.env.APP_PORT || 3006, () => {
-    console.log(`Listening to the Port: ${httpServer.address().port}`);
   });
   
   app.use(express.json({ limit: "50mb" }));

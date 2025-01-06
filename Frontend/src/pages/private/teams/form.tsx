@@ -88,8 +88,13 @@ const TeamsForm: React.FC<TeamsFormProps> = ({
           )}
         </Upload>
       </Form.Item>
-      <Form.Item>
-        <Button loading={loading} type="primary" htmlType="submit">
+      <Form.Item className="flex justify-end">
+        <Button 
+          loading={loading} 
+          type="primary" 
+          htmlType="submit"
+          style={{ backgroundColor: '#064518' }}
+        >
           {editingTeam ? 'Update' : 'Add'}
         </Button>
       </Form.Item>

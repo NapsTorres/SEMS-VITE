@@ -28,7 +28,6 @@ export default function useMediaHooks() {
     const formData = new FormData();
     Object.keys(values).forEach((key) => {
         const value = values[key as keyof typeof values];
-        console.log(value)
         if (key === "media" && value?.length > 0) {
           formData.append(key, value[0]?.originFileObj);
         } else {
