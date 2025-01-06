@@ -12,6 +12,7 @@
   "dependencies": {
     "@g-loot/react-tournament-brackets": "^1.0.31-rc",
     "@tanstack/react-query": "^5.59.16",
+    "@tinymce/tinymce-react": "^5.1.1",
     "antd": "^5.21.5",
     "axios": "^1.7.7",
     "client": "file:",

@@ -65,6 +65,10 @@ const useGameSchedule = () => {
       
       message.success('Schedule updated successfully');
       setScheduleModalVisible(false);
+      // Reset form values
+      setSchedule("");
+      setVenue("");
+      setSelectedMatch(null);
       refetch(); // Refresh the matches data
     } catch (error) {
       message.error('Failed to update schedule');

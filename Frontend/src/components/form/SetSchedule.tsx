@@ -27,10 +27,27 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
 }) => {
   const [form] = Form.useForm();
 
+  // Reset form when modal becomes visible
+  React.useEffect(() => {
+    if (isModalVisible) {
+      form.setFieldsValue({
+        schedule: schedule ? moment(schedule) : null,
+        venue: venue
+      });
+    }
+  }, [isModalVisible, schedule, venue, form]);
+
   const handleSubmit = () => {
     form.validateFields().then(() => {
       handleScheduleSubmit();
+      // Reset form after successful submission
+      form.resetFields();
     });
+  };
+
+  const handleCancel = () => {
+    form.resetFields();
+    onCancel();
   };
 
   return (
@@ -38,7 +55,7 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
       title={<span className="text-xl font-semibold">📅 Set Match Schedule</span>}
       open={isModalVisible}
       onOk={handleSubmit}
-      onCancel={onCancel}
+      onCancel={handleCancel}
       centered
       okText="Save Schedule"
       cancelText="Cancel"

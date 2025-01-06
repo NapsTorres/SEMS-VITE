@@ -52,8 +52,7 @@ export const CoachTeamPage: React.FC = () => {
     handleDeletePlayerTeam,
     showAddPlayerModal,
     showEditPlayerModal,
-    onModalClose,
-    selectedPlayer
+    onModalClose
   } = useCoach();
 
   // Create memoized lists of unique events and sports
@@ -278,15 +277,6 @@ export const CoachTeamPage: React.FC = () => {
           form={form} 
           onFinish={isEditMode ? handleUpdatePlayer : handleAddPlayerTeam} 
           layout="vertical"
-          initialValues={isEditMode ? {
-            playerName: selectedPlayer?.playerName,
-            medicalCertificate: selectedPlayer?.medicalCertificate ? [{
-              uid: '-1',
-              name: 'medical-certificate',
-              status: 'done',
-              url: selectedPlayer.medicalCertificate,
-            }] : []
-          } : undefined}
         >
           <Form.Item
             name="playerName"
