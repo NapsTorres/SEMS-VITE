@@ -5,26 +5,44 @@ const queryAsync = util.promisify(pool.query).bind(pool);
 
 exports.generateMatches = async (req, res) => {
   const { eventId } = req.params;
-  let { bracketType, teams } = req.body;
+  let { bracketType, teams, sportsId } = req.body;
 
   try {
-    switch (bracketType) {
-      case "Single Elimination":
-        await generateSingleEliminationMatches(eventId, teams);
-        break;
-      case "Double Elimination":
-        await generateDoubleEliminationMatches(eventId, teams);
-        break;
-      case "Round Robin":
-        await generateRoundRobinMatches(eventId, teams);
-        break;
-      default:
-        return res.status(400).json({ error: "Invalid bracket type" });
+    // Verify sportsId exists
+    if (!sportsId) {
+      return res.status(400).json({ 
+        success: 0,
+        message: "sportsId is required to generate matches" 
+      });
     }
 
-    res.json({ message: `${bracketType} matches generated successfully` });
+    switch (bracketType) {
+      case "Single Elimination":
+        await generateSingleEliminationMatches(eventId, teams, sportsId);
+        break;
+      case "Double Elimination":
+        await generateDoubleEliminationMatches(eventId, teams, sportsId);
+        break;
+      case "Round Robin":
+        await generateRoundRobinMatches(eventId, teams, sportsId);
+        break;
+      default:
+        return res.status(400).json({ 
+          success: 0,
+          message: "Invalid bracket type" 
+        });
+    }
+
+    return res.json({ 
+      success: 1,
+      message: `${bracketType} matches generated successfully` 
+    });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error("Error generating matches:", error);
+    return res.status(500).json({ 
+      success: 0,
+      message: error.message || "Failed to generate matches" 
+    });
   }
 };
 
