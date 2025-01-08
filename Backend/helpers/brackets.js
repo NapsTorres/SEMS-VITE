@@ -246,6 +246,9 @@ const generateDoubleEliminationMatches = async (sportEventsId, teams, sportsId) 
   const matchQuery =
     "INSERT INTO matches (sportEventsId, bracketId, round, team1Id, team2Id, status, schedule, next_match_id, loser_next_match_id, isFinal, bracketType) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
+  // Variable to track the last winner bracket match
+  let lastWinnerBracketMatchId = null;
+
   // Create brackets
   const [winnerBracketResult] = await db
     .promise()
@@ -405,6 +408,12 @@ const generateDoubleEliminationMatches = async (sportEventsId, teams, sportsId) 
           matchId,
         ]);
     }
+
+    // Store the final winner match ID for later use
+    lastWinnerBracketMatchId = finalWinnerMatchId;
+  } else if (winnerRound2MatchIds.length === 1) {
+    // If there's only one match in round 2, it's our last winner bracket match
+    lastWinnerBracketMatchId = winnerRound2MatchIds[0];
   }
 
   // Create loser bracket progression matches only if there are matches in loser bracket
@@ -569,6 +578,16 @@ const generateDoubleEliminationMatches = async (sportEventsId, teams, sportsId) 
           currentLoserRoundMatchIds[0],
         ]);
 
+      // Link the loser of the last winner bracket match to the final loser match
+      if (lastWinnerBracketMatchId) {
+        await db
+          .promise()
+          .query("UPDATE matches SET loser_next_match_id = ? WHERE matchId = ?", [
+            finalLoserMatchId,
+            lastWinnerBracketMatchId,
+          ]);
+      }
+
       // Create final match (winner bracket winner vs loser bracket winner)
       const [firstFinalMatchResult] = await db
         .promise()
@@ -587,17 +606,17 @@ const generateDoubleEliminationMatches = async (sportEventsId, teams, sportsId) 
         ]);
       const firstFinalMatchId = firstFinalMatchResult.insertId;
 
-      // Link winners to final
-      const lastWinnerMatch = winnerRound2MatchIds.length > 1 ? 
-        await queryAsync("SELECT matchId FROM matches WHERE bracketType = 'winners' AND round = 3 AND sportEventsId = ? LIMIT 1", [sportEventsId]) :
-        winnerRound2MatchIds[0];
+      // Link last winner bracket match to final
+      if (lastWinnerBracketMatchId) {
+        await db
+          .promise()
+          .query("UPDATE matches SET next_match_id = ? WHERE matchId = ?", [
+            firstFinalMatchId,
+            lastWinnerBracketMatchId,
+          ]);
+      }
 
-      await db
-        .promise()
-        .query("UPDATE matches SET next_match_id = ? WHERE matchId = ?", [
-          firstFinalMatchId,
-          lastWinnerMatch.matchId || lastWinnerMatch,
-        ]);
+      // Link final loser bracket match to final
       await db
         .promise()
         .query("UPDATE matches SET next_match_id = ? WHERE matchId = ?", [
@@ -922,10 +941,8 @@ const doubleSetWinner = async (data) => {
       [team1Score, team2Score, winnerTeamId, matchId]
     );
 
-    // Update standings only for non-final matches
-    if (!match.isFinal) {
-      await updateTeamStanding(winnerTeamId, loserTeamId, sportEventsId);
-    }
+    // Always update standings for final and final rematch matches, and regular matches
+    await updateTeamStanding(winnerTeamId, loserTeamId, sportEventsId);
 
     // Handle winner progression (similar to single elimination)
     if (next_match_id) {
@@ -945,18 +962,21 @@ const doubleSetWinner = async (data) => {
         let updateField = "team1Id";
         let updateStat = "team1stat";
 
-        // If there's another match feeding into this one, coordinate positions
         if (otherMatch) {
-          if (otherMatch.team1Id === null) {
-            updateField = "team2Id";
-            updateStat = "team2stat";
+          // Check if the other match is already completed
+          if (otherMatch.status === 'completed') {
+            // If other match is completed, put this winner in the remaining empty slot
+            updateField = nextMatch.team1Id === null ? "team1Id" : "team2Id";
+            updateStat = updateField === "team1Id" ? "team1stat" : "team2stat";
+          } else {
+            // If other match is not completed, use the opposite slot of what the other match will use
+            updateField = otherMatch.matchId < matchId ? "team2Id" : "team1Id";
+            updateStat = updateField === "team1Id" ? "team1stat" : "team2stat";
           }
         } else {
-          // If no other match, use first available position
-          if (nextMatch.team1Id !== null) {
-            updateField = "team2Id";
-            updateStat = "team2stat";
-          }
+          // If no other match feeds into this one, use first empty slot
+          updateField = nextMatch.team1Id === null ? "team1Id" : "team2Id";
+          updateStat = updateField === "team1Id" ? "team1stat" : "team2stat";
         }
 
         // Update next match with winner
@@ -985,14 +1005,21 @@ const doubleSetWinner = async (data) => {
         );
 
         if (otherLoserMatch) {
-          if (otherLoserMatch.team1Id === null) {
-            updateField = "team2Id";
-            updateStat = "team2stat";
+          // Check if the other match is already completed
+          if (otherLoserMatch.status === 'completed') {
+            // If other match is completed, put this loser in the remaining empty slot
+            updateField = loserNextMatch.team1Id === null ? "team1Id" : "team2Id";
+            updateStat = updateField === "team1Id" ? "team1stat" : "team2stat";
+          } else {
+            // If other match is not completed, use the opposite slot of what the other match will use
+            updateField = otherLoserMatch.matchId < matchId ? "team2Id" : "team1Id";
+            updateStat = updateField === "team1Id" ? "team1stat" : "team2stat";
           }
-        } else if (loserNextMatch.team1Id !== null) {
-            updateField = "team2Id";
-            updateStat = "team2stat";
-          }
+        } else {
+          // If no other match feeds into this one, use first empty slot
+          updateField = loserNextMatch.team1Id === null ? "team1Id" : "team2Id";
+          updateStat = updateField === "team1Id" ? "team1stat" : "team2stat";
+        }
 
         await queryAsync(
           `UPDATE matches SET ${updateField} = ?, ${updateStat} = ? WHERE matchId = ?`,
