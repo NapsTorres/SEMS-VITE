@@ -109,6 +109,7 @@ module.exports = {
           p.playerName,
           p.medicalCertificate,
           p.status,
+          p.remarks,
           p.teamEventId
         FROM players p
         WHERE p.teamEventId IN (
@@ -263,11 +264,15 @@ module.exports = {
   },
   updatePlayerStatus: async (data) => {
     try {
-      const { playerId, status, updatedBy } = data;
+      const { playerId, status, remarks, updatedBy } = data;
       
+      if (status === 'rejected' && !remarks) {
+        return { success: 0, message: "Remarks are required when rejecting a player" };
+      }
+
       await queryAsync(
-        "UPDATE players SET status = ?, updatedBy = ?, updatedAt = CURRENT_TIMESTAMP WHERE playerId = ?",
-        [status, updatedBy, playerId]
+        "UPDATE players SET status = ?, remarks = ?, updatedBy = ?, updatedAt = CURRENT_TIMESTAMP WHERE playerId = ?",
+        [status, remarks || null, updatedBy, playerId]
       );
 
       return { success: 1, message: "Player status updated successfully" };

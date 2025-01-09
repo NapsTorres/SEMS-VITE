@@ -155,6 +155,16 @@ export const CoachTeamPage: React.FC = () => {
       ),
     },
     {
+      title: "Remarks",
+      dataIndex: "remarks",
+      key: "remarks",
+      render: (remarks: string, record: any) => (
+        <span className={record.status === 'rejected' ? 'text-red-600' : 'text-gray-600'}>
+          {remarks || '-'}
+        </span>
+      ),
+    },
+    {
       title: "Actions",
       key: "actions",
       render: (_text: any, record: any) => (
@@ -308,24 +318,17 @@ export const CoachTeamPage: React.FC = () => {
               onChange={handleFileChange}
               fileList={fileList}
             >
-              {previewImage ? (
-                <div style={{ textAlign: "center" }}>
-                  <Image src={previewImage} alt="Medical Certificate" />
-                </div>
-              ) : (
-                <div>
-                  <p className="ant-upload-drag-icon">
-                    <InboxOutlined />
-                  </p>
-                  <p className="ant-upload-text">
-                    Click or drag file to this area to upload
-                  </p>
-                  <p className="ant-upload-hint">
-                    Support for a single upload. Only .pdf, .jpg, .jpeg, and
-                    .png files are allowed.
-                  </p>
-                </div>
-              )}
+              <div>
+                <p className="ant-upload-drag-icon">
+                  <InboxOutlined />
+                </p>
+                <p className="ant-upload-text">
+                  {isEditMode ? "Click or drag file to upload new medical certificate" : "Click or drag file to this area to upload"}
+                </p>
+                <p className="ant-upload-hint">
+                  Support for a single upload. Only .pdf, .jpg, .jpeg, and .png files are allowed.
+                </p>
+              </div>
             </Dragger>
           </Form.Item>
           <Form.Item>

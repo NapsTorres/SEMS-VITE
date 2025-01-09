@@ -6,7 +6,7 @@ import TeamsServices from "../../../config/service/teams";
 import { dateStringFormatter } from "../../../utility/utils";
 import { FaTrophy, FaUsers } from "react-icons/fa";
 import { MdEvent } from "react-icons/md";
-import { Button, notification, Tooltip, Select } from "antd";
+import { Button, notification, Tooltip, Select, Modal, Input } from "antd";
 import { CheckCircleOutlined, CloseCircleOutlined, ArrowLeftOutlined } from '@ant-design/icons';
 import useStore from "../../../zustand/store/store";
 import { selector } from "../../../zustand/store/store.provider";
@@ -121,13 +121,34 @@ export const TeamInfo = () => {
     }
   });
 
-  const handleUpdateStatus = async (playerId: number, status: string) => {
+  const [rejectModalVisible, setRejectModalVisible] = useState(false);
+  const [selectedPlayerId, setSelectedPlayerId] = useState<number | null>(null);
+  const [rejectRemarks, setRejectRemarks] = useState('');
+
+  const handleUpdateStatus = async (playerId: number, status: string, remarks?: string) => {
     const formData = new FormData();
     formData.append('playerId', playerId.toString());
     formData.append('status', status);
     formData.append('updatedBy', admin.info.id);
+    if (remarks) {
+      formData.append('remarks', remarks);
+    }
 
     updatePlayerStatusMutation.mutate(formData);
+  };
+
+  const handleReject = (playerId: number) => {
+    setSelectedPlayerId(playerId);
+    setRejectModalVisible(true);
+  };
+
+  const handleRejectSubmit = () => {
+    if (selectedPlayerId && rejectRemarks) {
+      handleUpdateStatus(selectedPlayerId, 'rejected', rejectRemarks);
+      setRejectModalVisible(false);
+      setRejectRemarks('');
+      setSelectedPlayerId(null);
+    }
   };
 
   if (isFetchingTeams) {
@@ -265,16 +286,19 @@ export const TeamInfo = () => {
                   <table className="w-full table-auto border-collapse">
                     <thead className="bg-gray-50 sticky top-0">
                       <tr>
-                        <th className="px-4 py-3 text-sm font-semibold text-gray-700 text-left w-1/4">
+                        <th className="px-4 py-3 text-sm font-semibold text-gray-700 text-left w-1/5">
                           Player Name
                         </th>
-                        <th className="px-4 py-3 text-sm font-semibold text-gray-700 text-left w-1/4">
+                        <th className="px-4 py-3 text-sm font-semibold text-gray-700 text-left w-1/5">
                           Medical Certificate
                         </th>
-                        <th className="px-4 py-3 text-sm font-semibold text-gray-700 text-left w-1/4">
+                        <th className="px-4 py-3 text-sm font-semibold text-gray-700 text-left w-1/5">
                           Status
                         </th>
-                        <th className="px-4 py-3 text-sm font-semibold text-gray-700 text-left w-1/4">
+                        <th className="px-4 py-3 text-sm font-semibold text-gray-700 text-left w-1/5">
+                          Remarks
+                        </th>
+                        <th className="px-4 py-3 text-sm font-semibold text-gray-700 text-left w-1/5">
                           Actions
                         </th>
                       </tr>
@@ -283,7 +307,7 @@ export const TeamInfo = () => {
                       {sportEvent.players.map((player: any) => (
                         <tr
                           key={player.playerId}
-                          className="hover:bg-gray-50"
+                          className="group hover:bg-gray-50"
                         >
                           <td className="px-4 py-3 text-sm text-gray-800">
                             <div className="flex items-center">
@@ -310,6 +334,14 @@ export const TeamInfo = () => {
                               {player.status?.charAt(0).toUpperCase() + player.status?.slice(1)}
                             </span>
                           </td>
+                          <td className="px-4 py-3 text-sm">
+                            <span className={`${
+                              player.status === 'rejected' ? 'text-red-600' :
+                              'text-gray-600'
+                            }`}>
+                              {player.remarks || '-'}
+                            </span>
+                          </td>
                           <td className="px-4 py-3">
                             <div className="flex space-x-2">
                               <Tooltip title="Approve Player">
@@ -324,7 +356,7 @@ export const TeamInfo = () => {
                                 <Button
                                   type="text"
                                   icon={<CloseCircleOutlined className={player.status === 'rejected' ? 'text-gray-400' : 'text-red-600'} />}
-                                  onClick={() => handleUpdateStatus(player.playerId, 'rejected')}
+                                  onClick={() => handleReject(player.playerId)}
                                   disabled={player.status === 'rejected'}
                                 />
                               </Tooltip>
@@ -340,6 +372,34 @@ export const TeamInfo = () => {
           ))}
         </div>
       ))}
+
+      {/* Reject Modal */}
+      <Modal
+        title="Reject Player"
+        open={rejectModalVisible}
+        onOk={handleRejectSubmit}
+        onCancel={() => {
+          setRejectModalVisible(false);
+          setRejectRemarks('');
+          setSelectedPlayerId(null);
+        }}
+        okButtonProps={{ 
+          style: { backgroundColor: '#064518' },
+          disabled: !rejectRemarks
+        }}
+      >
+        <div className="mt-4">
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Rejection Remarks <span className="text-red-500">*</span>
+          </label>
+          <Input.TextArea
+            value={rejectRemarks}
+            onChange={(e) => setRejectRemarks(e.target.value)}
+            placeholder="Please provide a reason for rejection"
+            rows={4}
+          />
+        </div>
+      </Modal>
     </div>
   );
 };

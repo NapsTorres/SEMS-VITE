@@ -52,17 +52,7 @@ export default function useCoach() {
   const handleFileChange = (info: any) => {
     const updatedFileList = info.fileList.slice(-1); 
     setFileList(updatedFileList);
-
-    if (info.fileList.length > 0) {
-      const file = info.fileList[0].originFileObj;
-      const reader = new FileReader();
-      reader.onload = () => {
-        setPreviewImage(reader.result as string);
-      };
-      reader.readAsDataURL(file); 
-    } else {
-      setPreviewImage(null);
-    }
+    setPreviewImage(null);
   };
 
   const handleAddPlayerTeam = async(values:any) =>{
