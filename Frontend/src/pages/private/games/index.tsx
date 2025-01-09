@@ -28,6 +28,13 @@ export const GameScoring = () => {
     localStorage.setItem('gameScoring_sport', sportFilter);
   }, [statusFilter, roundFilter, eventFilter, sportFilter]);
 
+  // Effect to handle event filter changes
+  useEffect(() => {
+    if (eventFilter === 'all') {
+      setSportFilter('all');
+    }
+  }, [eventFilter]);
+
   const filterOptions = useMemo(() => {
     if (!Match) return { events: [], sports: [], rounds: [] };
 
