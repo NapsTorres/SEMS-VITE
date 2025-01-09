@@ -176,7 +176,12 @@ export const GameSchedule = () => {
         {/* Event Filter */}
         <Select
           value={eventFilter}
-          onChange={setEventFilter}
+          onChange={(value) => {
+            setEventFilter(value);
+            if (value === 'all') {
+              setSportFilter('all');
+            }
+          }}
           style={{ width: 200 }}
           placeholder="Filter by Event"
           className="rounded-full"

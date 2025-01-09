@@ -36,13 +36,6 @@ const useGameSchedule = () => {
     }
   }, [statusFilter, roundFilter, eventFilter, sportFilter, dateFilter]);
 
-  // Effect to handle event filter changes
-  useEffect(() => {
-    if (eventFilter === 'all') {
-      setSportFilter('all');
-    }
-  }, [eventFilter]);
-
   // Rest of your existing state
   const [currentPage, setCurrentPage] = useState(1);
   const [matchesPerPage] = useState(10);
