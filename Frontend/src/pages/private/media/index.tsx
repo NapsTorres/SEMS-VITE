@@ -30,6 +30,7 @@ export const MediaPage: React.FC = () => {
   const handleFormSubmit = (values: any) => {
     handleUploadMedia(values);
     setPreviewUrl(""); 
+    setIsModalVisible(false);
   };
 
   const handlePreview = (file: any) => {
@@ -149,8 +150,9 @@ export const MediaPage: React.FC = () => {
           </Form.Item>
 
           <Form.Item
-            label="Title (Optional)"
+            label="Title"
             name="title"
+            rules={[{ required: true, message: "Please enter a title." }]}
           >
             <Input placeholder="Enter title" />
           </Form.Item>

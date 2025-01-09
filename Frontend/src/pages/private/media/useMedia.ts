@@ -30,6 +30,8 @@ export default function useMediaHooks() {
         const value = values[key as keyof typeof values];
         if (key === "media" && value?.length > 0) {
           formData.append(key, value[0]?.originFileObj);
+        } else if (key === "author" && (!value || value.trim() === "")) {
+          formData.append(key, "PATHFIT");
         } else {
           formData.append(key, value !== null ? String(value) : "");
         }
