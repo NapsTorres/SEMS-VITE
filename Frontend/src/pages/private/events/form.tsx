@@ -17,12 +17,24 @@ const EventsForm: React.FC<EventsFormProps> = ({
   loading
 }) => {
 
+  const onFinish = (values: Events) => {
+    // Ensure description is an empty string if undefined
+    const formattedValues = {
+      ...values,
+      description: values.description || ''
+    };
+    handleAddOrEditEvent(formattedValues);
+  };
+
   return (
     <Form
       form={form}
       layout="vertical"
-      onFinish={handleAddOrEditEvent}
-      initialValues={editingEvents || {}}
+      onFinish={onFinish}
+      initialValues={{
+        ...editingEvents,
+        description: editingEvents?.description || ''
+      }}
     >
       <Form.Item
         name="eventName"
