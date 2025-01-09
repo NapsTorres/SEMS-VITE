@@ -6,8 +6,8 @@ import TeamsServices from "../../../config/service/teams";
 import { dateStringFormatter } from "../../../utility/utils";
 import { FaTrophy, FaUsers } from "react-icons/fa";
 import { MdEvent } from "react-icons/md";
-import { Button, notification, Tooltip, Select, Modal, Input } from "antd";
-import { CheckCircleOutlined, CloseCircleOutlined, ArrowLeftOutlined } from '@ant-design/icons';
+import { Button, notification, Tooltip, Select, Modal, Input, Image } from "antd";
+import { CheckCircleOutlined, CloseCircleOutlined, ArrowLeftOutlined, EyeOutlined } from '@ant-design/icons';
 import useStore from "../../../zustand/store/store";
 import { selector } from "../../../zustand/store/store.provider";
 import { useQueryClient } from "@tanstack/react-query";
@@ -316,14 +316,32 @@ export const TeamInfo = () => {
                             </div>
                           </td>
                           <td className="px-4 py-3">
-                            <a
-                              href={player.medicalCertificate}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-blue-500 text-sm hover:underline"
-                            >
-                              View Certificate
-                            </a>
+                            <div className="flex items-center gap-2">
+                              <div className="w-12 h-12 relative">
+                                <Image
+                                  src={player.medicalCertificate}
+                                  alt="Medical Certificate"
+                                  className="w-full h-full object-cover rounded"
+                                  fallback="https://via.placeholder.com/100?text=No+Image"
+                                  preview={{
+                                    mask: (
+                                      <div className="flex items-center justify-center">
+                                        <EyeOutlined className="text-lg" />
+                                      </div>
+                                    ),
+                                  }}
+                                />
+                              </div>
+                              <a
+                                href={player.medicalCertificate}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-blue-500 hover:text-blue-600 text-sm"
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                View Full
+                              </a>
+                            </div>
                           </td>
                           <td className="px-4 py-3 text-sm">
                             <span className={`${

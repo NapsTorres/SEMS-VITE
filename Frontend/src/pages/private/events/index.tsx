@@ -52,8 +52,16 @@ export const EventsPage: React.FC = () => {
                   <Popconfirm
                     title="Are you sure to delete this event?"
                     onConfirm={() => handleDeleteEvents(event.eventId)}
-                    okText="Yes"
-                    cancelText="No"
+                    okText="Delete"
+                    cancelText="Cancel"
+                    okButtonProps={{ 
+                      danger: true,
+                      className: "w-24"
+                    }}
+                    cancelButtonProps={{
+                      className: "w-24"
+                    }}
+                    rootClassName="centered-buttons"
                   >
                     <DeleteOutlined style={{ color: 'red' }} />
                   </Popconfirm>

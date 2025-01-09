@@ -57,7 +57,7 @@ export const GameScoring = () => {
   const getStatusBackground = (status: string) => {
     const lowerStatus = status?.toLowerCase() || '';
     switch (lowerStatus) {
-      case "scheduled":
+      case "pending":
         return "bg-gradient-to-r from-yellow-200 to-yellow-400";
       case "ongoing":
         return "bg-gradient-to-r from-orange-300 to-orange-500";
@@ -76,7 +76,9 @@ export const GameScoring = () => {
       const matchStatus = match.status?.toLowerCase() || '';
       const filterStatus = statusFilter.toLowerCase();
 
-      const statusMatch = filterStatus === "all" || matchStatus === filterStatus;
+      const statusMatch = filterStatus === "all" || 
+        (filterStatus === "pending" && (matchStatus === "pending" || matchStatus === "scheduled")) ||
+        matchStatus === filterStatus;
       const roundMatch = roundFilter === "all" || match.round.toString() === roundFilter;
       const eventMatch = eventFilter === "all" || match.event.eventName === eventFilter;
       const sportMatch = sportFilter === "all" || match.sport.sportsName === sportFilter;
@@ -84,14 +86,15 @@ export const GameScoring = () => {
       return statusMatch && roundMatch && eventMatch && sportMatch && hasSched;
     });
 
-    // Define exact order: scheduled -> ongoing -> completed
+    // Define exact order: pending/scheduled -> ongoing -> completed
     const getStatusOrder = (status: string): number => {
       const lowerStatus = status?.toLowerCase() || '';
       switch (lowerStatus) {
+        case 'pending':
         case 'scheduled': return 0;
         case 'ongoing': return 1;
         case 'completed': return 2;
-        default: return 999; // Any other status goes to the end
+        default: return 999;
       }
     };
     
@@ -150,7 +153,7 @@ export const GameScoring = () => {
           className="rounded-full"
         >
           <Option value="all">All Statuses</Option>
-          <Option value="scheduled">Pending</Option>
+          <Option value="pending">Pending</Option>
           <Option value="ongoing">Ongoing</Option>
           <Option value="completed">Completed</Option>
         </Select>

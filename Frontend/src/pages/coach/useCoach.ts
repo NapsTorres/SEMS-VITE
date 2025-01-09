@@ -42,17 +42,33 @@ export default function useCoach() {
     setSelectedPlayer(player);
     setIsModalVisible(true);
     form.setFieldsValue({
-      playerName: player.playerName
+      playerName: player.playerName,
+      medicalCertificate: player.medicalCertificate ? [{ url: player.medicalCertificate, name: 'Current Certificate' }] : []
     });
     if (player.medicalCertificate) {
       setPreviewImage(player.medicalCertificate);
+      setFileList([{ url: player.medicalCertificate, name: 'Current Certificate', uid: '-1' }]);
     }
   };
 
   const handleFileChange = (info: any) => {
+    if (info.fileList.length === 0) {
+      setFileList([]);
+      setPreviewImage(null);
+      return;
+    }
+    
     const updatedFileList = info.fileList.slice(-1); 
     setFileList(updatedFileList);
-    setPreviewImage(null);
+    
+    // If it's a new file, generate preview
+    if (updatedFileList[0]?.originFileObj) {
+      const reader = new FileReader();
+      reader.onload = () => {
+        setPreviewImage(reader.result as string);
+      };
+      reader.readAsDataURL(updatedFileList[0].originFileObj);
+    }
   };
 
   const handleAddPlayerTeam = async(values:any) =>{
@@ -83,8 +99,11 @@ export default function useCoach() {
     const formData = new FormData();
     Object.keys(values).forEach((key) => {
         const value = values[key as keyof typeof values];
-        if (key === "medicalCertificate" && value?.length > 0) {
-          formData.append(key, value[0]?.originFileObj);
+        if (key === "medicalCertificate") {
+          // Only append if there's a new file
+          if (value?.length > 0 && value[0]?.originFileObj) {
+            formData.append(key, value[0]?.originFileObj);
+          }
         } else {
           formData.append(key, value !== null ? String(value) : "");
         }

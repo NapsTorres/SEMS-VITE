@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
+import { Popconfirm } from "antd";
 import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
@@ -66,12 +67,28 @@ const SwiperCarousel: React.FC<SwiperCarouselProps> = ({
               </div>
 
               {/* Action Button */}
-              <button
-                className="w-full bg-red-500 text-white font-bold py-2 rounded-lg hover:bg-red-600 transition duration-200"
-                onClick={() => onButtonClick(item.mediaId)}
+              <Popconfirm
+                title="Delete Media"
+                description="Are you sure you want to delete this media?"
+                onConfirm={() => onButtonClick(item.mediaId)}
+                okText="Delete"
+                cancelText="Cancel"
+                okButtonProps={{ 
+                  danger: true,
+                  className: "w-24"
+                }}
+                cancelButtonProps={{
+                  className: "w-24"
+                }}
+                rootClassName="centered-buttons"
+                placement="top"
               >
-                {item.buttonText}
-              </button>
+                <button
+                  className="w-full bg-red-500 text-white font-bold py-2 rounded-lg hover:bg-red-600 transition duration-200"
+                >
+                  {item.buttonText}
+                </button>
+              </Popconfirm>
             </div>
           </SwiperSlide>
         ))}

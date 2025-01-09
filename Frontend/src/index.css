@@ -268,3 +268,10 @@
   background-color: #0a5c22 !important;
   border-color: #0a5c22 !important;
 }
+
+/* Center buttons in Popconfirm */
+.centered-buttons .ant-popconfirm-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+}

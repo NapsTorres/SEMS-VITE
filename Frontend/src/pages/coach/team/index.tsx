@@ -14,7 +14,7 @@ import {
   Tooltip,
   Select,
 } from "antd";
-import { InboxOutlined, EditOutlined, DeleteOutlined, PlusOutlined } from "@ant-design/icons";
+import { InboxOutlined, EditOutlined, DeleteOutlined, PlusOutlined, EyeOutlined } from "@ant-design/icons";
 import useCoach from "../useCoach";
 
 const { Title } = Typography;
@@ -127,18 +127,34 @@ export const CoachTeamPage: React.FC = () => {
       title: "Medical Certificate",
       dataIndex: "medicalCertificate",
       key: "medicalCertificate",
-      render: (text: string) =>
-        text ? (
-          <Image
-            src={text}
-            alt="Medical Certificate"
-            width={50}
-            height={50}
-            style={{ objectFit: "cover" }}
-          />
-        ) : (
-          "No Image"
-        ),
+      render: (medicalCertificate: string) => (
+        <div className="flex items-center gap-2">
+          <div className="w-12 h-12 relative">
+            <Image
+              src={medicalCertificate}
+              alt="Medical Certificate"
+              className="w-full h-full object-cover rounded"
+              fallback="https://via.placeholder.com/100?text=No+Image"
+              preview={{
+                mask: (
+                  <div className="flex items-center justify-center">
+                    <EyeOutlined className="text-lg" />
+                  </div>
+                ),
+              }}
+            />
+          </div>
+          <a
+            href={medicalCertificate}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-blue-500 hover:text-blue-600 text-sm"
+            onClick={(e) => e.stopPropagation()}
+          >
+            View Full
+          </a>
+        </div>
+      ),
     },
     {
       title: "Status",
@@ -179,11 +195,16 @@ export const CoachTeamPage: React.FC = () => {
             title="Delete Player"
             description="Are you sure you want to delete this player?"
             onConfirm={() => handleDeletePlayerTeam(record.playerId)}
-            okText="Yes"
-            cancelText="No"
+            okText="Delete"
+            cancelText="Cancel"
             okButtonProps={{ 
-              className: "bg-red-500 hover:bg-red-600"
+              danger: true,
+              className: "w-24"
             }}
+            cancelButtonProps={{
+              className: "w-24"
+            }}
+            rootClassName="centered-buttons"
           >
             <Tooltip title="Delete player">
               <DeleteOutlined 
@@ -297,6 +318,7 @@ export const CoachTeamPage: React.FC = () => {
           >
             <Input />
           </Form.Item>
+          
           <Form.Item
             name="medicalCertificate"
             label="Medical Certificate"
@@ -317,18 +339,37 @@ export const CoachTeamPage: React.FC = () => {
               accept=".pdf,.jpg,.jpeg,.png"
               onChange={handleFileChange}
               fileList={fileList}
+              onPreview={() => {
+                if (previewImage) {
+                  window.open(previewImage, '_blank');
+                }
+              }}
             >
-              <div>
-                <p className="ant-upload-drag-icon">
-                  <InboxOutlined />
-                </p>
-                <p className="ant-upload-text">
-                  {isEditMode ? "Click or drag file to upload new medical certificate" : "Click or drag file to this area to upload"}
-                </p>
-                <p className="ant-upload-hint">
-                  Support for a single upload. Only .pdf, .jpg, .jpeg, and .png files are allowed.
-                </p>
-              </div>
+              {(previewImage || fileList[0]?.thumbUrl) ? (
+                <div className="p-4">
+                  <img
+                    src={previewImage || fileList[0]?.thumbUrl}
+                    alt="Certificate Preview"
+                    className="max-w-full h-auto rounded mx-auto"
+                    style={{ maxHeight: '150px', objectFit: 'contain' }}
+                  />
+                  <p className="text-gray-500 mt-2 text-center">
+                    {isEditMode ? "Click or drag file to upload new medical certificate" : "Click or drag file to replace"}
+                  </p>
+                </div>
+              ) : (
+                <div>
+                  <p className="ant-upload-drag-icon">
+                    <InboxOutlined />
+                  </p>
+                  <p className="ant-upload-text">
+                    Click or drag file to this area to upload
+                  </p>
+                  <p className="ant-upload-hint">
+                    Support for a single upload. Only .pdf, .jpg, .jpeg, and .png files are allowed.
+                  </p>
+                </div>
+              )}
             </Dragger>
           </Form.Item>
           <Form.Item>

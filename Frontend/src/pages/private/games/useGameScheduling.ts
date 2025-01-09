@@ -121,7 +121,9 @@ const useGameSchedule = () => {
       const matchStatus = match.status?.toLowerCase() || '';
       const filterStatus = statusFilter.toLowerCase();
 
-      const statusMatch = filterStatus === "all" || matchStatus === filterStatus;
+      const statusMatch = filterStatus === "all" || 
+        (filterStatus === "pending" && (matchStatus === "pending" || matchStatus === "scheduled")) ||
+        matchStatus === filterStatus;
       const roundMatch = roundFilter === "all" || match.round.toString() === roundFilter;
       const eventMatch = eventFilter === "all" || match.event.eventName === eventFilter;
       const sportMatch = sportFilter === "all" || match.sport.sportsName === sportFilter;
@@ -130,10 +132,11 @@ const useGameSchedule = () => {
       return statusMatch && roundMatch && eventMatch && sportMatch && dateMatch;
     });
 
-    // Define exact order: scheduled -> ongoing -> completed
+    // Define exact order: pending/scheduled -> ongoing -> completed
     const getStatusOrder = (status: string): number => {
       const lowerStatus = status?.toLowerCase() || '';
       switch (lowerStatus) {
+        case 'pending':
         case 'scheduled': return 0;
         case 'ongoing': return 1;
         case 'completed': return 2;
@@ -142,19 +145,22 @@ const useGameSchedule = () => {
     };
     
     return filtered.sort((a: any, b: any) => {
-      // First, compare by status order
+      // First, prioritize matches without schedule and venue
+      const aHasSchedule = a.schedule && a.venue;
+      const bHasSchedule = b.schedule && b.venue;
+      if (!aHasSchedule && bHasSchedule) return -1;
+      if (aHasSchedule && !bHasSchedule) return 1;
+
+      // Then compare by status order
       const aOrder = getStatusOrder(a.status);
       const bOrder = getStatusOrder(b.status);
       if (aOrder !== bOrder) return aOrder - bOrder;
       
-      // If same status, sort by schedule date (newer first)
+      // If same status and both have schedule, sort by schedule date (newer first)
       if (a.schedule && b.schedule) {
         return new Date(b.schedule).getTime() - new Date(a.schedule).getTime();
       }
       
-      // Put matches without schedule at the end
-      if (!a.schedule) return 1;
-      if (!b.schedule) return -1;
       return 0;
     });
   }, [Match, statusFilter, roundFilter, eventFilter, sportFilter, dateFilter]);

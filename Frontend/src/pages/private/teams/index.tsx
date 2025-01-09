@@ -97,10 +97,18 @@ export const TeamsPage: React.FC = () => {
           </Tooltip>
           <Tooltip title="Delete Team">
             <Popconfirm
-              title="Are you sure you want to delete this team?"
+              title="Are you sure to delete this team?"
               onConfirm={() => handleDeleteTeam(record.teamId)}
-              okText="Yes"
-              cancelText="No"
+              okText="Delete"
+              cancelText="Cancel"
+              okButtonProps={{ 
+                danger: true,
+                className: "w-24"
+              }}
+              cancelButtonProps={{
+                className: "w-24"
+              }}
+              rootClassName="centered-buttons"
             >
               <Button
                 type="text"

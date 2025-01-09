@@ -47,8 +47,16 @@ export const SportsPage: React.FC = () => {
                   <Popconfirm
                     title="Are you sure to delete this sports?"
                     onConfirm={() => handleDeleteTeam(sport.sportsId)}
-                    okText="Yes"
-                    cancelText="No"
+                    okText="Delete"
+                    cancelText="Cancel"
+                    okButtonProps={{ 
+                      danger: true,
+                      className: "w-24"
+                    }}
+                    cancelButtonProps={{
+                      className: "w-24"
+                    }}
+                    rootClassName="centered-buttons"
                   >
                     <DeleteOutlined style={{ color: '#ff4d4f' }} />
                   </Popconfirm>

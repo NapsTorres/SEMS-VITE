@@ -299,7 +299,7 @@ module.exports = {
       }
 
       await queryAsync(
-        "UPDATE players SET playerName = ?, medicalCertificate = ?, updatedBy = ?, updatedAt = CURRENT_TIMESTAMP WHERE playerId = ?",
+        "UPDATE players SET playerName = ?, medicalCertificate = ?, status = 'pending', remarks = NULL, updatedBy = ?, updatedAt = CURRENT_TIMESTAMP WHERE playerId = ?",
         [playerName, imageUrl, updatedBy, playerId]
       );
 
@@ -309,7 +309,9 @@ module.exports = {
         results: {
           playerId,
           playerName,
-          medicalCertificate: imageUrl
+          medicalCertificate: imageUrl,
+          status: 'pending',
+          remarks: null
         }
       };
     } catch (error) {

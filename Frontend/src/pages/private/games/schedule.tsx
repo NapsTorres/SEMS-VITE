@@ -168,7 +168,7 @@ export const GameSchedule = () => {
           className="rounded-full"
         >
           <Option value="all">All Statuses</Option>
-          <Option value="scheduled">Pending</Option>
+          <Option value="pending">Pending</Option>
           <Option value="ongoing">Ongoing</Option>
           <Option value="completed">Completed</Option>
         </Select>

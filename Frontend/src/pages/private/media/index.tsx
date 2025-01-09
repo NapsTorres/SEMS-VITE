@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState } from "react";
-import { Button, Modal, Upload, Select, Form, Typography, message, Input } from "antd";
+import { Button, Modal, Upload, Select, Form, Typography, message, Input, Spin } from "antd";
 import { UploadOutlined, InboxOutlined } from "@ant-design/icons";
 import "swiper/css";
 import "swiper/css/pagination";
@@ -29,8 +29,6 @@ export const MediaPage: React.FC = () => {
 
   const handleFormSubmit = (values: any) => {
     handleUploadMedia(values);
-    setPreviewUrl(""); 
-    setIsModalVisible(false);
   };
 
   const handlePreview = (file: any) => {
@@ -42,25 +40,14 @@ export const MediaPage: React.FC = () => {
     }
   };
 
-  const confirmDelete = (mediaId: number) => {
-    Modal.confirm({
-      title: "Are you sure you want to delete this media?",
-      content: "This action cannot be undone.",
-      okText: "Yes, Delete",
-      okType: "danger",
-      cancelText: "Cancel",
-      onOk: () => handleDeleteMedia(mediaId),
-      onCancel: () => message.info("Delete action cancelled."),
-    });
+  const onDeleteMedia = async (mediaId: number) => {
+    try {
+      await handleDeleteMedia(mediaId);
+    } catch (error) {
+      message.error("Failed to delete media. Please try again.");
+    }
   };
 
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center min-h-screen">
-        <Text>Loading media...</Text>
-      </div>
-    );
-  }
   return (
     <div className="p-6 min-h-screen">
       <div className="flex justify-center items-center mb-4">
@@ -83,7 +70,11 @@ export const MediaPage: React.FC = () => {
         <Title level={3} className="text-gray-800 mb-4">
           Images
         </Title>
-        {Medias && Medias.length > 0 ? (
+        {isFetchingMedia ? (
+          <div className="flex justify-center">
+            <Spin />
+          </div>
+        ) : Medias && Medias.length > 0 ? (
           <SwiperCarousel
             items={Medias.filter(
               (media: { type: string }) => media.type === "image"
@@ -96,7 +87,7 @@ export const MediaPage: React.FC = () => {
               author: media.author, 
               mediaId: media.mediaId, 
             }))}
-            onButtonClick={confirmDelete} 
+            onButtonClick={onDeleteMedia} 
           />
         ) : (
           <Text>No images uploaded yet.</Text>
@@ -107,7 +98,11 @@ export const MediaPage: React.FC = () => {
         <Title level={3} className="text-gray-800 mb-4">
           Videos
         </Title>
-        {Medias && Medias.length > 0 ? (
+        {isFetchingMedia ? (
+          <div className="flex justify-center">
+            <Spin />
+          </div>
+        ) : Medias && Medias.length > 0 ? (
           <SwiperCarousel
             items={Medias.filter(
               (media: { type: string }) => media.type === "video"
@@ -120,7 +115,7 @@ export const MediaPage: React.FC = () => {
               description: media.description, 
               author: media.author, 
             }))}
-            onButtonClick={confirmDelete} 
+            onButtonClick={onDeleteMedia} 
           />
         ) : (
           <Text>No videos uploaded yet.</Text>
@@ -133,6 +128,7 @@ export const MediaPage: React.FC = () => {
         onCancel={() => {
           setIsModalVisible(false);
           setPreviewUrl(""); 
+          form.resetFields();
         }}
         footer={null}
         width={600}
@@ -230,7 +226,7 @@ export const MediaPage: React.FC = () => {
               type="primary"
               htmlType="submit"
               block
-              loading={isFetchingMedia}
+              loading={loading}
               style={{ backgroundColor: '#064518', borderColor: '#064518', color: 'white' }}
             >
               Upload

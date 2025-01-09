@@ -40,20 +40,20 @@ export default function useMediaRequest({ setIsModalVisible }: UseMediaRequestPr
     return useRequestData(serviceMethod, {
       onSuccess: (response) => onSuccessHandler(response, successMessage),
       onError: handleError,
+      retry: false
     });
   };
 
-  const { mutate: uploadMedia,isPending:isUploading } = createMutation(
-    MediaServices.add
+  const { mutate: uploadMedia, isPending: isUploading } = createMutation(
+    MediaServices.add,
+    "Media uploaded successfully"
   );
-  const { mutate: deleteMedia,isPending:isDeleting } = createMutation(
-    MediaServices.delete
+  const { mutate: deleteMedia, isPending: isDeleting } = createMutation(
+    MediaServices.delete,
+    "Media deleted successfully"
   );
 
-  const isLoading = [
-    isUploading,
-    isDeleting,
-  ].some(Boolean);
+  const isLoading = isUploading || isDeleting;
 
   return {
     isLoading,
