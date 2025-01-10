@@ -12,6 +12,7 @@ import HeaderComponents from "./header";
 import MatchSection from "./match";
 import NewsSection from "./newsSection";
 import { io } from "socket.io-client";
+import { WEBSOCKET_URL } from "../../../config/socket/websocket";
 
 export const LandingPage = () => {
   const { data: [summary] = [], refetch } = useFetchData(
@@ -55,7 +56,7 @@ export const LandingPage = () => {
 
   // WebSocket connection for real-time updates
   useEffect(() => {
-    const socket = io('http://localhost:3006', {
+    const socket = io(WEBSOCKET_URL, {
       withCredentials: true
     });
 

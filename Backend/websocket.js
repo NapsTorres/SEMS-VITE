@@ -5,7 +5,14 @@ let io;
 const initializeSocket = (httpServer) => {
   io = new Server(httpServer, {
     cors: {
-      origin: ['http://localhost:5173', 'http://localhost:5174', 'http://localhost:5175', 'http://localhost:5177', 'https://ncf-sems.vercel.app'],
+      origin: [
+        'http://localhost:5173',
+        'http://localhost:5174',
+        'http://localhost:5175', 
+        'http://localhost:5177',
+        'https://ncf-sems.vercel.app',
+        'https://ncf-sems.onrender.com'
+      ],
       methods: ["GET", "POST"],
       credentials: true
     }

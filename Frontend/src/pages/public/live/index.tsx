@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import { io } from "socket.io-client";
+import { WEBSOCKET_URL } from '../../../config/socket/websocket';
 import SportsServices from "../../../config/service/sports";
 
 const LiveMatch = () => {
@@ -14,7 +15,7 @@ const LiveMatch = () => {
   useEffect(() => {
     // Initialize socket connection
     console.log('Attempting to connect to WebSocket...');
-    const socket = io('http://localhost:3006', {
+    const socket = io(WEBSOCKET_URL, {
       withCredentials: true
     });
 

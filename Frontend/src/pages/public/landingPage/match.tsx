@@ -15,7 +15,8 @@ import {
 } from "../animation";
 import { useNavigate } from "react-router-dom";
 import BracketSection from "./bracketSection";
-import io from "socket.io-client";
+import { io } from 'socket.io-client';
+import { WEBSOCKET_URL } from '../../../config/socket/websocket';
 
 const MatchSection: React.FC<{
   matches: any;
@@ -69,7 +70,7 @@ const MatchSection: React.FC<{
   // WebSocket connection for real-time updates
   useEffect(() => {
     console.log('MatchSection: Setting up WebSocket connection');
-    const socket = io('http://localhost:3006', {
+    const socket = io(WEBSOCKET_URL, {
       withCredentials: true
     });
 

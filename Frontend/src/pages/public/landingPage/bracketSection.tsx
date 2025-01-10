@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from 'react'
 import MainBracket from '../../../components/brackets/mainBracket'
 import { io } from "socket.io-client";
+import { WEBSOCKET_URL } from '../../../config/socket/websocket';
 
 const BracketSection: React.FC<{ matches: any, teams: any, bracketType: any }> = ({ matches: initialMatches, teams, bracketType }) => {
   const [matches, setMatches] = useState(initialMatches);
@@ -13,7 +14,7 @@ const BracketSection: React.FC<{ matches: any, teams: any, bracketType: any }> =
 
   useEffect(() => {
     console.log('BracketSection: Setting up WebSocket connection');
-    const socket = io('http://localhost:3006', {
+    const socket = io(WEBSOCKET_URL, {
       withCredentials: true
     });
 

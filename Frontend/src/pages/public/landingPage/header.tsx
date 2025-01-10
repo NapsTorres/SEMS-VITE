@@ -5,6 +5,7 @@ import "antd/dist/reset.css"; // Import Ant Design styles
 import { AnimatedComponent, createSlideInVariant } from "../animation";
 import { useNavigate } from "react-router-dom";
 import { io } from "socket.io-client";
+import { WEBSOCKET_URL } from "../../../config/socket/websocket";
 
 const { Option } = Select;
 
@@ -27,7 +28,7 @@ const HeaderComponents: React.FC<{
 
   // WebSocket connection for real-time updates
   useEffect(() => {
-    const socket = io('http://localhost:3006', {
+    const socket = io(WEBSOCKET_URL, {
       withCredentials: true
     });
 
