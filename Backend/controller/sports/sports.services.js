@@ -3,6 +3,7 @@ const pool = require("../../middleware/db.js");
 const util = require("util");
 const { uploadImage, deleteImageByURL } = require("../../middleware/utils.js");
 const { checkIfExists } = require("../../helpers/checkIfExist.js");
+const { emitSportUpdate } = require("../../websocket");
 const queryAsync = util.promisify(pool.query).bind(pool);
 
 module.exports = {
@@ -16,6 +17,8 @@ module.exports = {
         "INSERT INTO sports (sportsName, sportsLogo, description,createdBy) VALUES (?, ?, ?,?)",
         [sportsName, imageUrl, description,createdBy]
       );
+      // Emit sport update
+      emitSportUpdate();
       return {
         success: 1,
         message: "New Sport added successfully",

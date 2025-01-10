@@ -1,26 +1,71 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useFetchData } from "../../../config/axios/requestData";
-import SportsServices from "../../../config/service/sports";
+import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { motion } from "framer-motion";
+import { io } from "socket.io-client";
+import SportsServices from "../../../config/service/sports";
 
 const LiveMatch = () => {
-  const navigate = useNavigate()
+  const navigate = useNavigate();
   const { eventName, sportName, matchId } = useParams<any>();
+  const [matchInfo, setMatchInfo] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Fetch summary data
-  const { data: [summary] = [], isLoading } = useFetchData(
-    ["summary"],
-    [() => SportsServices.fetchSportsSummary()],
-    { interval: 1000 }
-  );
+  useEffect(() => {
+    // Initialize socket connection
+    console.log('Attempting to connect to WebSocket...');
+    const socket = io('http://localhost:3006', {
+      withCredentials: true
+    });
 
+    socket.on('connect', () => {
+      console.log('WebSocket connected successfully!');
+    });
 
-  const matchInfo = summary?.events
-    ?.find((v: any) => v.eventName === eventName)
-    ?.sportsEvents?.find((x: any) => x.sportsName === sportName)
-    ?.matches?.find((y: any) => y.matchId.toString() === matchId);
+    socket.on('connect_error', (error) => {
+      console.error('WebSocket connection error:', error);
+    });
 
+    // Listen for score updates for this specific match
+    socket.on(`score_update_${matchId}`, ({ team1Score, team2Score }) => {
+      console.log('Received score update:', { team1Score, team2Score });
+      setMatchInfo((prev: any) => prev ? {
+        ...prev,
+        team1Score,
+        team2Score
+      } : null);
+    });
+
+    // Cleanup socket connection on unmount
+    return () => {
+      console.log('Disconnecting WebSocket...');
+      socket.disconnect();
+    };
+  }, [matchId]);
+
+  // Fetch initial match data
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await SportsServices.fetchSportsSummary();
+        if (response.data.success) {
+          const summary = response.data.results;
+          const match = summary?.events
+            ?.find((v: any) => v.eventName === eventName)
+            ?.sportsEvents?.find((x: any) => x.sportsName === sportName)
+            ?.matches?.find((y: any) => y.matchId.toString() === matchId);
+
+          setMatchInfo(match);
+        }
+      } catch (error) {
+        console.error('Error fetching match data:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [eventName, sportName, matchId]);
 
   if (isLoading) {
     return (
@@ -40,16 +85,14 @@ const LiveMatch = () => {
 
   return (
     <div className="bg-gradient-to-r from-green-500 via-green-600 to-green-700 min-h-screen relative overflow-hidden">
-    <header className="bg-[#f8ba00] h-24 shadow-md ">
-      <div className="flex justify-end relative items-center">
-        {/* Logo and Title Section */}
-        <div onClick={() => navigate('/')} className="absolute cursor-pointer top-0 -left-12 flex items-center z-50 pl-24 gap-4 bg-[#064518] text-white pr-12 py-2 h-28 w-[40%] -skew-x-12">
-          <img src="/ncfi-logo.png" className="w-24" alt="NCFI Logo" />
-          <p className="text-3xl font-bold">Naga College Foundation, Inc.</p>
+      <header className="bg-[#f8ba00] h-24 shadow-md">
+        <div className="flex justify-end relative items-center">
+          <div onClick={() => navigate('/')} className="absolute cursor-pointer top-0 -left-12 flex items-center z-50 pl-24 gap-4 bg-[#064518] text-white pr-12 py-2 h-28 w-[40%] -skew-x-12">
+            <img src="/ncfi-logo.png" className="w-24" alt="NCFI Logo" />
+            <p className="text-3xl font-bold">Naga College Foundation, Inc.</p>
+          </div>
         </div>
-
-      </div>
-    </header>
+      </header>
       <main className="min-h-screen px-8 py-12 pt-20">
         <div className="bg-white shadow-lg rounded-lg p-8 max-w-4xl mx-auto relative overflow-hidden">
           <h2 className="text-4xl font-bold text-center mb-6 text-green-700">
@@ -121,7 +164,6 @@ const LiveMatch = () => {
               {new Date(matchInfo.schedule).toLocaleString()}
             </p>
           </div>
-
         </div>
       </main>
       <footer className="bg-gray-800 text-white text-center py-4" id="contact">

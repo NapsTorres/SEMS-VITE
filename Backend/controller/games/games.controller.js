@@ -1,6 +1,6 @@
 const { errorException } = require("../../helpers/errorException");
 const { handleResponse } = require("../../helpers/handleResponse");
-const { fetchMatches, fetchMatchById, incrementScore, gameStatus } = require("./games.services")
+const { fetchMatches, fetchMatchById, updateScore, gameStatus } = require("./games.services")
 
 
 module.exports ={
@@ -22,7 +22,7 @@ module.exports ={
       IncrementScore: (req, res) => {
         try {
           const data = req.body
-          handleResponse(res, incrementScore(data));
+          handleResponse(res, updateScore(data));
         } catch (error) {
           errorException(error, res);
         }

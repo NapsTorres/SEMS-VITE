@@ -8,7 +8,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import useEventsRequest from "../../../config/data/events";
 import { notification } from "antd";
 
-export default function useGameScorig({ matchId }: { matchId?: any }) {
+export default function useGameScoring({ matchId }: { matchId?: any }) {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const [team1Score, setTeam1Score] = useState(0);
@@ -18,7 +18,7 @@ export default function useGameScorig({ matchId }: { matchId?: any }) {
 
   const { data: Match } = useFetchData(["Game"], [GamesServices.gameSchedule]);
   const { data: [MatchInfo] = [] } = useFetchData(["game-id"], [() => GamesServices.gameMatchId(matchId)]);
-  const { setScore, setScore1,setScore2 } = useEventsRequest({
+  const { setScore, setScore1, setScore2 } = useEventsRequest({
     setIsModalVisible: () => setIsModalVisible(false),
   });
   const { incrementScoring, changingStatus } = useGameRequest({ setIsModalVisible: () => {} });
@@ -59,24 +59,39 @@ export default function useGameScorig({ matchId }: { matchId?: any }) {
 
   const updateMatch = () => {
     if (matchId && team1Score !== null && team2Score !== null) {
-        const formData = new FormData();
-        formData.append("team1Score", team1Score.toString());
-        formData.append("team2Score", team2Score.toString());
-        formData.append("matchId",matchId.toString());
-        if(!MatchInfo?.sportEvent?.bracketType){
-          notification.error({
-            message:'No bracketType detected'
-          })
-          return
+      // First update the status to completed
+      const statusFormData = new FormData();
+      statusFormData.append("matchId", matchId);
+      statusFormData.append("status", "completed");
+
+      changingStatus(statusFormData, {
+        onSuccess: () => {
+          // Then update the scores
+          const scoreFormData = new FormData();
+          scoreFormData.append("team1Score", team1Score.toString());
+          scoreFormData.append("team2Score", team2Score.toString());
+          scoreFormData.append("matchId", matchId.toString());
+
+          if (!MatchInfo?.sportEvent?.bracketType) {
+            notification.error({
+              message: 'No bracketType detected'
+            });
+            return;
+          }
+
+          const api = MatchInfo?.sportEvent?.bracketType === 'Single Elimination' ? setScore : 
+                     MatchInfo?.sportEvent?.bracketType === 'Double Elimination' ? setScore1 : setScore2;
+
+          api(scoreFormData, {
+            onSuccess: () => {
+              queryClient.invalidateQueries({ queryKey: ["game-id"] });
+              setIsModalVisible(false);
+            },
+          });
         }
-        const api = MatchInfo?.sportEvent?.bracketType === 'Single Elimination' ? setScore : MatchInfo?.sportEvent?.bracketType === 'Double Elimination' ? setScore1 : setScore2
-        api(formData, {
-          onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ["game-id"] });
-          },
-        });
-      }
-  }
+      });
+    }
+  };
 
   return {
     Match,

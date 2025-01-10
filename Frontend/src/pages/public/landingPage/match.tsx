@@ -1,6 +1,6 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import "swiper/css";
 import "swiper/css/effect-coverflow";
@@ -15,6 +15,7 @@ import {
 } from "../animation";
 import { useNavigate } from "react-router-dom";
 import BracketSection from "./bracketSection";
+import io from "socket.io-client";
 
 const MatchSection: React.FC<{
   matches: any;
@@ -22,7 +23,8 @@ const MatchSection: React.FC<{
   selectedSport: any;
   setSelectedSport: any;
   teams: any;
-}> = ({ matches, event, setSelectedSport, selectedSport, teams }) => {
+}> = ({ matches: initialMatches, event, setSelectedSport, selectedSport, teams }) => {
+  const [matches, setMatches] = useState(initialMatches);
   const navigate = useNavigate();
   const sports = matches?.map((match: any) => ({
     label: match.sportsName,
@@ -57,6 +59,77 @@ const MatchSection: React.FC<{
   const bracketType = event?.sportsEvents?.find(
     (v: any) => v.sportsName === selectedSport
   )?.bracketType;
+
+  // Update matches when initialMatches changes
+  useEffect(() => {
+    console.log('MatchSection: Initial matches updated', initialMatches);
+    setMatches(initialMatches);
+  }, [initialMatches]);
+
+  // WebSocket connection for real-time updates
+  useEffect(() => {
+    console.log('MatchSection: Setting up WebSocket connection');
+    const socket = io('http://localhost:3006', {
+      withCredentials: true
+    });
+
+    socket.on('connect', () => {
+      console.log('MatchSection: WebSocket connected');
+    });
+
+    socket.on('connect_error', (error) => {
+      console.error('MatchSection: WebSocket connection error:', error);
+    });
+
+    // Listen for score updates and status updates for all matches in the selected sport
+    const currentMatches = matches?.find((match: any) => match.sportsName === selectedSport)?.matches || [];
+    console.log('MatchSection: Setting up listeners for matches:', currentMatches);
+    
+    currentMatches.forEach((match: any) => {
+      // Score updates
+      socket.on(`score_update_${match.matchId}`, ({ team1Score, team2Score }) => {
+        console.log(`MatchSection: Received score update for match ${match.matchId}:`, { team1Score, team2Score });
+        setMatches((prevMatches: typeof initialMatches) => 
+          prevMatches.map((sport: any) => 
+            sport.sportsName === selectedSport
+              ? {
+                  ...sport,
+                  matches: sport.matches.map((m: any) =>
+                    m.matchId === match.matchId
+                      ? { ...m, team1Score, team2Score }
+                      : m
+                  )
+                }
+              : sport
+          )
+        );
+      });
+
+      // Status updates
+      socket.on(`status_update_${match.matchId}`, ({ status, winnerId }) => {
+        console.log(`MatchSection: Received status update for match ${match.matchId}:`, { status, winnerId });
+        setMatches((prevMatches: typeof initialMatches) => 
+          prevMatches.map((sport: any) => 
+            sport.sportsName === selectedSport
+              ? {
+                  ...sport,
+                  matches: sport.matches.map((m: any) =>
+                    m.matchId === match.matchId
+                      ? { ...m, status: status.toLowerCase(), winner_team_id: winnerId }
+                      : m
+                  )
+                }
+              : sport
+          )
+        );
+      });
+    });
+
+    return () => {
+      console.log('MatchSection: Cleaning up WebSocket connection');
+      socket.disconnect();
+    };
+  }, [matches, selectedSport]);
 
   return (
     <section

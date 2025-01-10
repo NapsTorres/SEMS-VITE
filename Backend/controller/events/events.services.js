@@ -13,6 +13,7 @@ const {
 const pool = require("../../middleware/db.js");
 const util = require("util");
 const queryAsync = util.promisify(pool.query).bind(pool);
+const { emitEventUpdate, emitSportUpdate } = require("../../websocket");
 
 module.exports = {
   // Create Event
@@ -30,6 +31,8 @@ module.exports = {
         "INSERT INTO events (eventName, eventYear, eventstartDate, eventendDate,description,createdBy) VALUES (?, ?, ?, ?, ?,?)",
         [eventName, eventYear, new Date(eventstartDate), new Date(eventendDate), description,createdBy]
       );
+      // Emit event update
+      emitEventUpdate();
       return { success: 1, message: "Event created" };
     } catch (error) {
       return { success: 0, message: error.message };
@@ -161,6 +164,9 @@ module.exports = {
         [teamToInsert]
       );
 
+      // Emit sport update when a sport is added to an event
+      emitSportUpdate();
+      
       return {
         success: 1,
         message: "Sports event and teams added successfully",
@@ -189,6 +195,8 @@ module.exports = {
           return { success: 0, message: "Invalid bracket type" };
       }
 
+      // Emit match update
+      emitSportUpdate();
       return {
         success: 1,
         message: `${bracketType} matches generated successfully`,

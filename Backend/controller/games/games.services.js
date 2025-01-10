@@ -1,6 +1,7 @@
 const { getSportsEventsWithDetails } = require("../../helpers/fetchSportInfo.js");
 const pool = require("../../middleware/db.js");
 const util = require("util");
+const { emitScoreUpdate, emitStatusUpdate } = require("../../websocket");
 const queryAsync = util.promisify(pool.query).bind(pool);
 
 module.exports = {
@@ -63,10 +64,12 @@ module.exports = {
     }
   },
 
-  incrementScore:async(data) =>{
+  updateScore: async (data) => {
     let { matchId, teamId, increment } = data;
-    teamId = Number(teamId)
-    increment = Number(increment)
+    
+    teamId = Number(teamId);
+    increment = Number(increment);
+    
     if (!matchId || !teamId || !increment) {
       return { success: 0, message: 'Invalid parameters.' }
     }
@@ -81,49 +84,71 @@ module.exports = {
       const match = matchResults[0];
   
       let updatedScore;
+      let team1Score = match.team1Score;
+      let team2Score = match.team2Score;
+
       if (match.team1Id === teamId) {
         updatedScore = Number(match.team1Score) + Number(increment);
+        team1Score = updatedScore;
         await queryAsync('UPDATE matches SET team1Score = ? WHERE matchId = ?', [updatedScore, matchId]);
       } else if (match.team2Id === teamId) {
         updatedScore = match.team2Score + increment;
+        team2Score = updatedScore;
         await queryAsync('UPDATE matches SET team2Score = ? WHERE matchId = ?', [updatedScore, matchId]);
       } else {
-        return { success: false, message: 'Invalid team ID for this match.' }
+        return { success: 0, message: 'Invalid team ID for this match.' }
       }
+
+      // Emit score update via WebSocket
+      emitScoreUpdate(matchId, team1Score, team2Score);
   
       return {
-        success: true,
+        success: 1,
         message: 'Score updated successfully.',
         matchId,
         teamId,
         updatedScore
       }
     } catch (error) {
-        console.error("Error fetching matches:", error);
+        console.error("Error updating score:", error);
         return { success: 0, message: error.message };
     }
   },
 
-  gameStatus:async(data) =>{
+  gameStatus: async(data) => {
     const { matchId, status } = data;
- 
-    if (!matchId || !status) {
+    // Convert status to lowercase for consistency
+    const normalizedStatus = status.toLowerCase();
+
+    if (!matchId || !normalizedStatus) {
         return { success: 0, message: "matchId and status are required" }
     }
 
     try {
         const result = await queryAsync(
             "UPDATE matches SET status = ? WHERE matchId = ?",
-            [status, matchId]
+            [normalizedStatus, matchId]
         );
 
         if (result.affectedRows === 0) {
             return { success: 0, message: "Match not found" }
         }
 
+        // Get winner ID if match is completed
+        let winnerId = null;
+        if (normalizedStatus === 'completed') {
+            const match = await queryAsync("SELECT * FROM matches WHERE matchId = ?", [matchId]);
+            if (match.length > 0) {
+                const { team1Id, team2Id, team1Score, team2Score } = match[0];
+                winnerId = team1Score > team2Score ? team1Id : team2Score > team1Score ? team2Id : null;
+            }
+        }
+
+        // Emit status update via WebSocket
+        emitStatusUpdate(matchId, normalizedStatus, winnerId);
+
         return { success: 1, message: "Game status updated successfully" }
     } catch (error) {
-        console.error("Error updating game status:", error);
         return { success: 0, message: "Failed to update game status" }
     }
   }

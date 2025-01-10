@@ -4,6 +4,7 @@ import { Select } from "antd";
 import "antd/dist/reset.css"; // Import Ant Design styles
 import { AnimatedComponent, createSlideInVariant } from "../animation";
 import { useNavigate } from "react-router-dom";
+import { io } from "socket.io-client";
 
 const { Option } = Select;
 
@@ -23,6 +24,32 @@ const HeaderComponents: React.FC<{
       setSelected(firstEventId);
     }
   }, [events, selected, setSelected]);
+
+  // WebSocket connection for real-time updates
+  useEffect(() => {
+    const socket = io('http://localhost:3006', {
+      withCredentials: true
+    });
+
+    socket.on('connect', () => {
+      console.log('Header: WebSocket connected');
+    });
+
+    socket.on('connect_error', (error) => {
+      console.error('Header: WebSocket connection error:', error);
+    });
+
+    // Listen for new events
+    socket.on('event_update', (updatedEvents) => {
+      console.log('Header: Received event update:', updatedEvents);
+      // The parent component should handle the event update through the events prop
+    });
+
+    return () => {
+      console.log('Header: Cleaning up WebSocket connection');
+      socket.disconnect();
+    };
+  }, []);
 
   const handleEventChange = (value: string) => {
     setSelected(value);
