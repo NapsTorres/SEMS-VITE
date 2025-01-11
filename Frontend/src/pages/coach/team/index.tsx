@@ -269,14 +269,20 @@ export const CoachTeamPage: React.FC = () => {
           }`}
           style={{ marginBottom: "16px" }}
           extra={
-            <Button
-              type="primary" 
-              icon={<PlusOutlined />} 
-              style={{ backgroundColor: '#064518', marginBottom: 0 }}
-              onClick={() => showAddPlayerModal(event.teamEvent.teamEventId)}
-            >
-              Add Player
-            </Button>
+            <div className="flex items-center gap-4">
+              <div className="text-sm text-gray-600">
+                Players: {event.players?.length || 0}/{event.maxPlayers || 0}
+              </div>
+              <Button
+                type="primary" 
+                icon={<PlusOutlined />} 
+                style={{ backgroundColor: '#064518', marginBottom: 0 }}
+                onClick={() => showAddPlayerModal(event.teamEvent.teamEventId)}
+                disabled={event.players?.length >= event.maxPlayers}
+              >
+                Add Player
+              </Button>
+            </div>
           }
         >
           <p>
@@ -286,6 +292,10 @@ export const CoachTeamPage: React.FC = () => {
           <p>
             <strong>Sport:</strong>{" "}
             {event.sportDetails?.sportsName || "No Sport"}
+          </p>
+          <p>
+            <strong>Max Players:</strong>{" "}
+            {event.maxPlayers || "Not Set"}
           </p>
           <Table
             dataSource={event.players || []}
