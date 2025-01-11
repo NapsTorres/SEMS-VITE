@@ -118,50 +118,41 @@ const useGameSchedule = () => {
     if (!Match) return [];
 
     const filtered = Match.filter((match: any) => {
-      const matchStatus = match.status?.toLowerCase() || '';
-      const filterStatus = statusFilter.toLowerCase();
-
-      const statusMatch = filterStatus === "all" || 
-        (filterStatus === "pending" && (matchStatus === "pending" || matchStatus === "scheduled")) ||
-        matchStatus === filterStatus;
+      const hasSched = match.schedule !== "" && match.schedule !== null;
+      const statusMatch = statusFilter === "all" || match.status === statusFilter;
       const roundMatch = roundFilter === "all" || match.round.toString() === roundFilter;
       const eventMatch = eventFilter === "all" || match.event.eventName === eventFilter;
       const sportMatch = sportFilter === "all" || match.sport.sportsName === sportFilter;
-      const dateMatch = !dateFilter || new Date(match.schedule).toDateString() === new Date(dateFilter).toDateString();
+      const dateMatch = !dateFilter || new Date(match.schedule).toISOString().split('T')[0] === dateFilter;
 
-      return statusMatch && roundMatch && eventMatch && sportMatch && dateMatch;
+      return statusMatch && roundMatch && eventMatch && sportMatch && dateMatch && hasSched;
     });
 
-    // Define exact order: pending/scheduled -> ongoing -> completed
-    const getStatusOrder = (status: string): number => {
-      const lowerStatus = status?.toLowerCase() || '';
-      switch (lowerStatus) {
-        case 'pending':
-        case 'scheduled': return 0;
-        case 'ongoing': return 1;
-        case 'completed': return 2;
-        default: return 999;
-      }
-    };
-    
+    // First show all unscheduled matches sorted by round, then all scheduled matches
     return filtered.sort((a: any, b: any) => {
-      // First, prioritize matches without schedule and venue
-      const aHasSchedule = a.schedule && a.venue;
-      const bHasSchedule = b.schedule && b.venue;
-      if (!aHasSchedule && bHasSchedule) return -1;
-      if (aHasSchedule && !bHasSchedule) return 1;
+      const aHasSchedule = Boolean(a.schedule && a.venue);
+      const bHasSchedule = Boolean(b.schedule && b.venue);
 
-      // Then compare by status order
-      const aOrder = getStatusOrder(a.status);
-      const bOrder = getStatusOrder(b.status);
-      if (aOrder !== bOrder) return aOrder - bOrder;
-      
-      // If same status and both have schedule, sort by schedule date (newer first)
-      if (a.schedule && b.schedule) {
-        return new Date(b.schedule).getTime() - new Date(a.schedule).getTime();
+      // If one is scheduled and the other isn't, unscheduled comes first
+      if (aHasSchedule !== bHasSchedule) {
+        return aHasSchedule ? 1 : -1;
       }
-      
-      return 0;
+
+      // If both are unscheduled, sort by round
+      if (!aHasSchedule && !bHasSchedule) {
+        return a.round - b.round;
+      }
+
+      // If both are scheduled, sort by status first
+      const statusOrder: { [key: string]: number } = { pending: 0, ongoing: 1, completed: 2 };
+      const aStatus = statusOrder[a.status?.toLowerCase() || ''] ?? 0;
+      const bStatus = statusOrder[b.status?.toLowerCase() || ''] ?? 0;
+      if (aStatus !== bStatus) {
+        return aStatus - bStatus;
+      }
+
+      // If same status, sort by schedule date (newer first)
+      return new Date(b.schedule).getTime() - new Date(a.schedule).getTime();
     });
   }, [Match, statusFilter, roundFilter, eventFilter, sportFilter, dateFilter]);
 

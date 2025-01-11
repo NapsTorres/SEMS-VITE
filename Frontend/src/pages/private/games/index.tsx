@@ -86,33 +86,23 @@ export const GameScoring = () => {
       return statusMatch && roundMatch && eventMatch && sportMatch && hasSched;
     });
 
-    // Define exact order: pending/scheduled -> ongoing -> completed
-    const getStatusOrder = (status: string): number => {
-      const lowerStatus = status?.toLowerCase() || '';
-      switch (lowerStatus) {
-        case 'pending':
-        case 'scheduled': return 0;
-        case 'ongoing': return 1;
-        case 'completed': return 2;
-        default: return 999;
-      }
-    };
-    
+    // First show all non-completed matches sorted by round and match ID, then completed matches
     return filtered.sort((a: any, b: any) => {
-      // First, compare by status order
-      const aOrder = getStatusOrder(a.status);
-      const bOrder = getStatusOrder(b.status);
-      if (aOrder !== bOrder) return aOrder - bOrder;
-      
-      // If same status, sort by schedule date (newer first)
-      if (a.schedule && b.schedule) {
-        return new Date(b.schedule).getTime() - new Date(a.schedule).getTime();
+      const aIsCompleted = a.status?.toLowerCase() === 'completed';
+      const bIsCompleted = b.status?.toLowerCase() === 'completed';
+
+      // If one is completed and the other isn't, completed goes to the back
+      if (aIsCompleted !== bIsCompleted) {
+        return aIsCompleted ? 1 : -1;
       }
-      
-      // Put matches without schedule at the end
-      if (!a.schedule) return 1;
-      if (!b.schedule) return -1;
-      return 0;
+
+      // If both are non-completed or both completed, sort by round first
+      if (a.round !== b.round) {
+        return a.round - b.round;
+      }
+
+      // If same round, sort by match ID
+      return a.matchId - b.matchId;
     });
   }, [Match, statusFilter, roundFilter, eventFilter, sportFilter]);
 
