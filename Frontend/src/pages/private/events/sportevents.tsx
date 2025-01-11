@@ -7,11 +7,15 @@ import useSportEventHooks, {
 import SingleElimForm from "../../../components/form/SingleElimForm";
 import DoubleElimForm from "../../../components/form/DoubleElimForm";
 import MainBracket from "../../../components/brackets/mainBracket";
-import { useNavigate } from "react-router-dom";
 import { ArrowLeftOutlined } from '@ant-design/icons';
 
-const SportEventInformation: React.FC<SportEventInformationProps> = ({
+interface Props extends SportEventInformationProps {
+  setSelectedSport: (sport: any) => void;
+}
+
+const SportEventInformation: React.FC<Props> = ({
   sportDetails,
+  setSelectedSport,
 }) => {
   const {
     matches,
@@ -20,21 +24,24 @@ const SportEventInformation: React.FC<SportEventInformationProps> = ({
     showModal,
     handleCloseModal
   } = useSportEventHooks({ sportDetails });
-  const navigate = useNavigate();
 
   if (!sportDetails && !matches) return null;
 
-  const handleBack = () => navigate(-1);
   return (  
     <div className="p-6 mt-4 mx-auto">
-      <button
-        onClick={handleBack}
-        className="flex items-center px-4 py-2 text-white font-semibold rounded shadow transition-colors w-fit mb-4"
-        style={{ backgroundColor: '#064518' }}
-      >
-        <ArrowLeftOutlined className="mr-2" />
-        Back
-      </button>
+      <div className="flex justify-end mb-4">
+        <button
+          onClick={() => {
+            // Clear the selected sport to show the event details view
+            setSelectedSport(null);
+          }}
+          className="flex items-center px-4 py-2 text-white font-semibold rounded shadow transition-colors w-fit"
+          style={{ backgroundColor: '#064518' }}
+        >
+          <ArrowLeftOutlined className="mr-2" />
+          Back
+        </button>
+      </div>
 
       <div className="flex flex-col items-center space-y-4">
         <img

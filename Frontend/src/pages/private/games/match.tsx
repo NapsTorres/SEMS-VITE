@@ -1,7 +1,8 @@
 import { useParams } from "react-router-dom";
 import { Button, Select, Typography, Modal } from "antd";
-import { ClockCircleOutlined, TrophyOutlined, FireOutlined, CrownOutlined } from "@ant-design/icons";
+import { ClockCircleOutlined, TrophyOutlined, FireOutlined, CrownOutlined, ArrowLeftOutlined } from "@ant-design/icons";
 import useGameScorig from "./useGameScoring";
+import { useNavigate } from "react-router-dom";
 
 const { Option } = Select;
 const { Title, Text } = Typography;
@@ -22,6 +23,8 @@ export const MatchScoring = () => {
     updateMatch,
     handleIncrementScore,
   } = useGameScorig({ matchId });
+
+  const navigate = useNavigate();
 
   const handleScoreChange = async (
     team: "team1" | "team2",
@@ -48,6 +51,34 @@ export const MatchScoring = () => {
   return (
     <div className="p-5 min-h-screen flex items-start justify-center container mx-auto">
       <div className="bg-white p-8 rounded-lg shadow-xl w-full relative bg-gradient-to-r from-indigo-100 to-blue-100">
+        <div className="flex items-center justify-between mb-4">
+          <h1 className="text-2xl font-bold text-gray-800 m-0">Match {matchId} Scoring</h1>
+          <Button 
+            icon={<ArrowLeftOutlined />} 
+            onClick={() => {
+              if (MatchInfo?.event?.eventId) {
+                if (MatchInfo?.sport?.sportsName) {
+                  localStorage.setItem('selectedSport', MatchInfo.sport.sportsName);
+                }
+                navigate(`/Events/${MatchInfo.event.eventId}`);
+                setTimeout(() => {
+                  const sportCards = document.querySelectorAll('.flex.rounded-md.cursor-pointer.flex-col.p-4.items-center.justify-center');
+                  sportCards.forEach((card) => {
+                    if (card.textContent?.includes(MatchInfo.sport.sportsName)) {
+                      (card as HTMLElement).click();
+                    }
+                  });
+                }, 100);
+              } else {
+                navigate(-1);
+              }
+            }}
+            style={{ backgroundColor: '#064518', borderColor: '#064518', color: 'white' }}
+          >
+            Back
+          </Button>
+        </div>
+
         {status === "ongoing" && (
           <div className="absolute top-0 right-0 m-4 animate-pulse text-red-500 font-semibold">
             <FireOutlined /> LIVE

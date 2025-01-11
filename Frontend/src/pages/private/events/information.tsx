@@ -5,6 +5,8 @@ import { dateFormatter } from "../../../utility/utils";
 import useInfoHooks from "./useInfoHooks";
 import { useState } from "react";
 import SportEventInformation from "./sportevents";
+import { ArrowLeftOutlined } from "@ant-design/icons";
+import { useNavigate } from "react-router-dom";
 
 const { Meta } = Card;
 
@@ -22,6 +24,7 @@ const EventInformation = () => {
     sportsOptions,
     setIsModalVisible,
   } = useInfoHooks({ eventId });
+  const navigate = useNavigate();
 
   const handleSelectAllTeams = (e: any) => {
     if (e.target.checked) {
@@ -37,7 +40,10 @@ const EventInformation = () => {
   return (
     <>
       {selectedSport ? (
-        <SportEventInformation sportDetails={selectedSport} />
+        <SportEventInformation 
+          sportDetails={selectedSport} 
+          setSelectedSport={setSelectedSport}
+        />
       ) : (
         <div className="flex flex-col items-center py-8 px-4 md:px-0">
           {loading ? (
@@ -45,7 +51,18 @@ const EventInformation = () => {
           ) : info ? (
             <Card
               className="w-full bg-white rounded-lg"
-              title={<h2 className="text-xl font-bold">{info.event.eventName}</h2>}
+              title={
+                <div className="flex justify-between items-center">
+                  <h2 className="text-xl font-bold">{info.event.eventName}</h2>
+                  <Button
+                    icon={<ArrowLeftOutlined />}
+                    onClick={() => navigate('/Events')}
+                    style={{ backgroundColor: '#064518', borderColor: '#064518', color: 'white' }}
+                  >
+                    Back
+                  </Button>
+                </div>
+              }
             >
               <Meta
                 description={
