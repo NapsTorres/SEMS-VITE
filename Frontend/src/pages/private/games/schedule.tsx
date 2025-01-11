@@ -14,11 +14,19 @@ import ScheduleModal from "../../../components/form/SetSchedule";
 import useGameSchedule from "./useGameScheduling";
 import { CiLocationOn } from "react-icons/ci";
 import moment from "moment";
+import { useLocation } from "react-router-dom";
+import { useEffect } from "react";
+import { useFetchData } from "../../../config/axios/requestData";
+import EventsServices from "../../../config/service/events";
+import { Events } from "../../../types";
 
 const { Option } = Select;
 const { Text } = Typography;
 
 export const GameSchedule = () => {
+  const location = useLocation();
+  const { openScheduleForm, matchId, team1Name, team2Name, team1Id, team2Id, currentSchedule, currentVenue } = location.state || {};
+
   const {
     isFetchingMatch,
     paginatedMatches,
@@ -47,6 +55,33 @@ export const GameSchedule = () => {
     statusFilter,
     setStatusFilter,
   } = useGameSchedule();
+
+  // Fetch events data
+  const { data: events } = useFetchData(["Events"], [() => EventsServices.fetchEvents()]);
+
+  // Get event dates for the selected match
+  const getEventDates = () => {
+    if (!selectedMatch?.event?.eventId) return { startDate: undefined, endDate: undefined };
+    const event = events?.find((e: Events) => e.eventId === selectedMatch.event.eventId);
+    return {
+      startDate: event?.eventStartDate,
+      endDate: event?.eventEndDate
+    };
+  };
+
+  // Handle auto-opening schedule modal when navigating from matchup card
+  useEffect(() => {
+    if (openScheduleForm && matchId) {
+      const match = {
+        matchId,
+        team1: { teamName: team1Name, teamId: team1Id },
+        team2: { teamName: team2Name, teamId: team2Id },
+        schedule: currentSchedule,
+        venue: currentVenue
+      };
+      openScheduleModal(match);
+    }
+  }, [openScheduleForm, matchId]);
 
   const getStatusTag = (status: string) => {
     switch (status) {
@@ -151,6 +186,8 @@ export const GameSchedule = () => {
     return <Spin size="large" />;
   }
 
+  const { startDate, endDate } = getEventDates();
+
   return (
     <div className="p-5">
       <div className="flex justify-center items-center mb-4">
@@ -231,32 +268,26 @@ export const GameSchedule = () => {
         <DatePicker
           value={dateFilter ? moment(dateFilter) : null}
           onChange={(date) => setDateFilter(date ? date.format('YYYY-MM-DD') : null)}
-          format="YYYY-MM-DD"
+          style={{ width: 200 }}
           placeholder="Filter by Date"
-          size="middle"
+          className="rounded-full"
         />
       </div>
 
-      {/* Matches Table */}
       <Table
-        columns={columns}
         dataSource={paginatedMatches}
+        columns={columns}
+        rowKey="matchId"
         pagination={{
           current: currentPage,
+          total: filteredMatches.length,
           pageSize: matchesPerPage,
-          total: filteredMatches?.length || 0,
           onChange: handlePageChange,
           showSizeChanger: false,
-          className: "rounded-full",
-          position: ["bottomRight"],
-          showTotal: (total) => `Total ${total} matches`
         }}
-        rowKey={(record: any) => record.matchId}
-        bordered
-        className="shadow-lg rounded-lg overflow-hidden"
+        className="mt-4"
       />
 
-      {/* Schedule Modal */}
       {selectedMatch && (
         <ScheduleModal
           isModalVisible={isScheduleModalVisible}
@@ -266,8 +297,13 @@ export const GameSchedule = () => {
           setVenue={setVenue}
           handleScheduleSubmit={() => handleScheduleSubmit(selectedMatch)}
           onCancel={() => setScheduleModalVisible(false)}
+          isSubmitting={false}
+          eventStartDate={startDate}
+          eventEndDate={endDate}
         />
       )}
     </div>
   );
 };
+
+export default GameSchedule;

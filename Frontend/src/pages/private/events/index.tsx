@@ -3,7 +3,7 @@ import { Card, Button, Modal, Popconfirm, Row, Col, Tooltip } from "antd";
 import { Events } from "../../../types";
 import TeamsForm from "./form";
 import useEventsHooks from "./useEventsHooks";
-import { dateFormatter } from "../../../utility/utils";
+import { dateFormatter } from '../../../utility/utils';
 import { useNavigate } from "react-router-dom";
 import { PlusOutlined, EditOutlined, DeleteOutlined, EyeOutlined } from "@ant-design/icons";
 
@@ -20,6 +20,17 @@ export const EventsPage: React.FC = () => {
     handleDeleteEvents,
     showModal,
   } = useEventsHooks();
+
+  const formatEventDate = (date: any) => {
+    console.log('Formatting date:', date);
+    if (!date) {
+      console.log('Date is null or undefined');
+      return 'Not set';
+    }
+    const formatted = dateFormatter(date);
+    console.log('Formatted date:', formatted);
+    return formatted;
+  };
 
   return (
     <div className="p-6">
@@ -68,8 +79,8 @@ export const EventsPage: React.FC = () => {
                 </Tooltip>
               ]}
             >
-              <p><strong>Start Date:</strong> {dateFormatter(event.eventstartDate)}</p>
-              <p><strong>End Date:</strong> {dateFormatter(event.eventendDate)}</p>
+              <p><strong>Start Date:</strong> {formatEventDate(event.eventStartDate)}</p>
+              <p><strong>End Date:</strong> {formatEventDate(event.eventEndDate)}</p>
               <p><strong>Added by:</strong> {event.createdByName}</p>
               <p><strong>Updated by:</strong> {event.updatedByName}</p>
               <div dangerouslySetInnerHTML={{__html:event.description}} />

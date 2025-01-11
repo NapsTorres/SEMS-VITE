@@ -20,24 +20,41 @@ export default function useEventsHooks() {
     useEventsRequest({
       setIsModalVisible,
     });
-  const { data: Events, isLoading: isFetchingEvents } = useFetchData(
+
+  const { data: rawEvents, isLoading: isFetchingEvents } = useFetchData(
     ["Events"],
     [
       () => EventsServices.fetchEvents(),
     ]
   );
+
+  // Debug logging
+  if (rawEvents && rawEvents.length > 0) {
+    console.log('First event raw data:', rawEvents[0]);
+    console.log('Available properties:', Object.keys(rawEvents[0]));
+  }
+
+  // Process the events to ensure dates are in the correct format
+  const Events = rawEvents?.map((event: any) => {
+    return {
+      ...event,
+      eventstartDate: event.eventStartDate,
+      eventendDate: event.eventEndDate
+    };
+  });
+
   const handleAddOrEditEvent = (values: Events) => {
     const formData = new FormData();
     formData.append("eventName", values.eventName);
     formData.append("description", values.description);
-    formData.append("eventYear", new Date().getFullYear.toString());
-    formData.append("eventstartDate", new Date(values.eventstartDate).toISOString());
-    formData.append("eventendDate", new Date(values.eventendDate).toISOString());
+    formData.append("eventYear", new Date().getFullYear().toString());
+    formData.append("eventstartDate", values.eventstartDate || '');
+    formData.append("eventendDate", values.eventendDate || '');
     if(editingEvents){
         formData.append("eventId", editingEvents.eventId.toString());
-        formData.append("updatedBy", admin.info.id);
+        formData.append("updatedBy", admin.info.id.toString());
     } else {
-      formData.append("createdBy", admin.info.id);
+      formData.append("createdBy", admin.info.id.toString());
     }
     const mutation = editingEvents ? editEventsMutation : addEventsMutation;
     mutation(formData, {
@@ -46,7 +63,6 @@ export default function useEventsHooks() {
         form.resetFields()
       },                
     });
- 
   };
 
   const handleDeleteEvents = (eventId: any) => {
@@ -58,9 +74,12 @@ export default function useEventsHooks() {
   const showModal = (team: Events | null = null) => {
     setEditingEvents(team);
     if (team) {
-      team.eventendDate = dayjs(team.eventendDate)
-      team.eventstartDate = dayjs(team.eventstartDate)
-      form.setFieldsValue(team);
+      const formValues = {
+        ...team,
+        eventendDate: dayjs(team.eventendDate),
+        eventstartDate: dayjs(team.eventstartDate)
+      };
+      form.setFieldsValue(formValues);
     } else {
       form.resetFields();
     }

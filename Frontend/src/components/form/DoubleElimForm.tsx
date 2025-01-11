@@ -2,8 +2,10 @@
 import { useState, useEffect } from "react";
 import { DatePicker, Select, Button, Form, Tabs } from "antd";
 import moment from "moment";
-import { Team } from "../../types";
+import { Team, Events } from "../../types";
 import useSportEventHooks from "../../pages/private/events/useSportEventHooks";
+import { useFetchData } from "../../config/axios/requestData";
+import EventsServices from "../../config/service/events";
 
 const { Option } = Select;
 const { TabPane } = Tabs;
@@ -33,6 +35,19 @@ const AdminMatchForm = ({
   const { isLoading, handleGenerateMatchup } = useSportEventHooks({
     sportDetails,
   });
+
+  // Fetch event details to get start and end dates
+  const { data: events } = useFetchData(
+    ["Events"],
+    [() => EventsServices.fetchEvents()]
+  );
+
+  const eventDetails = events?.find((event: Events) => 
+    event.eventId === sportDetails?.eventsId
+  );
+
+  const eventStartDate = eventDetails?.eventStartDate ? moment(eventDetails.eventStartDate) : null;
+  const eventEndDate = eventDetails?.eventEndDate ? moment(eventDetails.eventEndDate) : null;
 
   // Calculate matches needed for each round
   const calculateMatches = (teams: Team[]) => {
@@ -218,6 +233,11 @@ const AdminMatchForm = ({
                     onChange={(date) => handleDateChange(match.id, date)}
                     placeholder="dd/mm/yyyy --:-- AM/PM"
                     className="w-full"
+                    disabledDate={(current) => {
+                      if (!eventStartDate || !eventEndDate) return false;
+                      return current < eventStartDate.startOf('day') || 
+                             current > eventEndDate.endOf('day');
+                    }}
                   />
                 </Form.Item>
               </div>
@@ -319,6 +339,11 @@ const AdminMatchForm = ({
                     onChange={(date) => handleDateChange(match.id, date)}
                     placeholder="dd/mm/yyyy --:-- AM/PM"
                     className="w-full"
+                    disabledDate={(current) => {
+                      if (!eventStartDate || !eventEndDate) return false;
+                      return current < eventStartDate.startOf('day') || 
+                             current > eventEndDate.endOf('day');
+                    }}
                   />
                 </Form.Item>
               </div>

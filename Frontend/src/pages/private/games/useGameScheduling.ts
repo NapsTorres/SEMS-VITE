@@ -4,8 +4,10 @@ import { useFetchData } from "../../../config/axios/requestData";
 import GamesServices from "../../../config/service/games";
 import { message } from "antd";
 import moment from "moment";
+import { useLocation } from "react-router-dom";
 
 const useGameSchedule = () => {
+  const location = useLocation();
   // Get filters from localStorage or use defaults
   const getInitialFilter = (key: string) => {
     const saved = localStorage.getItem(`gameSchedule_${key}`);
@@ -46,6 +48,19 @@ const useGameSchedule = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const { data: Match, isLoading: isFetchingMatch, refetch } = useFetchData(["Game"], [GamesServices.gameSchedule]);
+
+  // Handle location state for auto-opening schedule form
+  useEffect(() => {
+    const state = location.state as { openScheduleForm?: boolean; matchId?: number };
+    if (state?.openScheduleForm && state?.matchId) {
+      const match = Match?.find((m: any) => m.matchId === state.matchId);
+      if (match) {
+        openScheduleModal(match);
+        // Clear the state after using it
+        window.history.replaceState({}, document.title, location.pathname);
+      }
+    }
+  }, [Match, location]);
 
   // Handle schedule submission
   const handleScheduleSubmit = async (match: any) => {

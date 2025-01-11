@@ -2,7 +2,7 @@
 import React from "react";
 import { Modal, DatePicker, Input, Typography, Form } from "antd";
 import { CalendarOutlined, EnvironmentOutlined } from "@ant-design/icons";
-import moment from "moment";
+import dayjs, { Dayjs } from 'dayjs';
 
 interface ScheduleModalProps {
   isModalVisible: boolean;
@@ -13,6 +13,8 @@ interface ScheduleModalProps {
   handleScheduleSubmit: () => void;
   onCancel: () => void;
   isSubmitting?: boolean;
+  eventStartDate?: string;
+  eventEndDate?: string;
 }
 
 const ScheduleModal: React.FC<ScheduleModalProps> = ({
@@ -24,6 +26,8 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
   handleScheduleSubmit,
   onCancel,
   isSubmitting = false,
+  eventStartDate,
+  eventEndDate,
 }) => {
   const [form] = Form.useForm();
 
@@ -31,23 +35,43 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
   React.useEffect(() => {
     if (isModalVisible) {
       form.setFieldsValue({
-        schedule: schedule ? moment(schedule) : null,
+        schedule: schedule ? dayjs(schedule) : null,
         venue: venue
       });
     }
   }, [isModalVisible, schedule, venue, form]);
 
-  const handleSubmit = () => {
-    form.validateFields().then(() => {
-      handleScheduleSubmit();
-      // Reset form after successful submission
+  const handleSubmit = async () => {
+    try {
+      await form.validateFields();
+      onCancel(); // Close the modal first
+      handleScheduleSubmit(); // Then handle the submission
       form.resetFields();
-    });
+    } catch (error) {
+      console.error('Validation failed:', error);
+    }
   };
 
   const handleCancel = () => {
     form.resetFields();
     onCancel();
+  };
+
+  const disabledDate = (current: Dayjs) => {
+    // Always prevent past dates
+    if (current && current.isBefore(dayjs().startOf('day'))) {
+      return true;
+    }
+
+    // If event dates are set, restrict to those dates
+    if (eventStartDate && eventEndDate) {
+      const start = dayjs(eventStartDate).startOf('day');
+      const end = dayjs(eventEndDate).endOf('day');
+      return current.isBefore(start) || current.isAfter(end);
+    }
+
+    // If no event dates are set, only prevent past dates
+    return false;
   };
 
   return (
@@ -72,6 +96,11 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
       <Form form={form} layout="vertical">
         <Typography.Text type="secondary" className="block mb-4">
           Please set both the schedule and venue for the match.
+          {eventStartDate && eventEndDate && (
+            <span className="block mt-1 text-xs">
+              Note: Schedule must be between {dayjs(eventStartDate).format('MMMM DD, YYYY')} and {dayjs(eventEndDate).format('MMMM DD, YYYY')}
+            </span>
+          )}
         </Typography.Text>
         
         <Form.Item
@@ -85,9 +114,9 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
             className="w-full border rounded-lg shadow-sm"
             placeholder="Select Date and Time"
             suffixIcon={<CalendarOutlined />}
-            value={schedule ? moment(schedule) : null}
+            value={schedule ? dayjs(schedule) : null}
             onChange={(date) => setSchedule(date ? date.format('YYYY-MM-DD HH:mm:ss') : '')}
-            disabledDate={(current) => current && current < moment().startOf('day')}
+            disabledDate={disabledDate}
           />
         </Form.Item>
 

@@ -14,14 +14,19 @@ export interface BracketTeam {
 }
 
 export interface Events {
-  updatedByName: any;
-  createdByName: any;
   eventId: number;
   eventName: string;
   eventYear: string;
-  eventendDate: any;
-  eventstartDate: any;
+  eventStartDate: string;
+  eventEndDate: string;
   description: string;
+  createdBy: number;
+  updatedBy?: number;
+  createdByName?: string;
+  updatedByName?: string;
+  createdAt?: string;
+  eventstartDate?: string; // For backward compatibility
+  eventendDate?: string;   // For backward compatibility
 }
 export interface Sports {
   sportsId: number;
@@ -62,6 +67,7 @@ export interface Match {
   team1Id: number | null;
   team2Id: number | null;
   schedule?: string;
+  venue?: string;
   next_match_id?: number | null;
   status: string;
   winner_team_id: number | null;
