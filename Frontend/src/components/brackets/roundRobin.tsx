@@ -2,8 +2,15 @@
 import React from "react";
 import { Match, RoundRobinHooksProps } from "../../types";
 import { dateStringFormatter } from "../../utility/utils";
+import { CalendarOutlined, EnvironmentOutlined } from "@ant-design/icons";
+import { useNavigate } from "react-router-dom";
 
-const RoundRobinBracket: React.FC<RoundRobinHooksProps> = ({ matches, teams }) => {
+interface RoundRobinBracketProps extends RoundRobinHooksProps {
+  isPublicView?: boolean;
+}
+
+const RoundRobinBracket: React.FC<RoundRobinBracketProps> = ({ matches, teams, isPublicView = false }) => {
+  const navigate = useNavigate();
   const roundsMatch = matches?.reduce((acc, match) => {
     const round = acc[match.round] || [];
     round.push(match);
@@ -11,18 +18,33 @@ const RoundRobinBracket: React.FC<RoundRobinHooksProps> = ({ matches, teams }) =
     return acc;
   }, {} as Record<number, Match[]>);
 
+  const handleMatchClick = (match: any) => {
+    if (isPublicView) return; // Disable click in public view
+    
+    if (!match.venue || !match.schedule) {
+      navigate('/Game-Schedule', { 
+        state: { 
+          openScheduleForm: true, 
+          matchId: match.matchId,
+          team1Name: teams.find((team: any) => team.teamId === match.team1Id)?.teamName,
+          team2Name: teams.find((team: any) => team.teamId === match.team2Id)?.teamName,
+          team1Id: match.team1Id,
+          team2Id: match.team2Id
+        } 
+      });
+    } else if (match.status !== "Completed") {
+      navigate(`/Game-Scoring/match/${match.matchId}`);
+    }
+  };
+
   return (
-    <div className="p-8 font-sans text-gray-800 z-50">
+    <div className="p-8 font-sans text-gray-800">
       <h1 className="text-5xl text-center font-bold text-red-600 mb-12">
         Round Robin Bracket
       </h1>
       <div className="flex flex-col gap-8">
-        {Object.keys(roundsMatch || [])?.map((roundKey) =>{ 
-          return(
-          <div
-            key={roundKey}
-            className="border-l-8 z-50 border-blue-500 p-8 rounded-lg shadow-lg bg-gradient-to-r from-blue-50 via-white to-blue-50"
-          >
+        {Object.keys(roundsMatch || [])?.map((roundKey) => (
+          <div key={roundKey} className="flex flex-col items-center">
             <h2 className="text-3xl font-semibold text-blue-700 mb-6">
               Round {roundKey}
             </h2>
@@ -34,31 +56,37 @@ const RoundRobinBracket: React.FC<RoundRobinHooksProps> = ({ matches, teams }) =
                 const team2 = teams.find(
                   (team: any) => team.teamId === match.team2Id
                 );
-                const statusClass =
-                  match.status === "Completed"
-                    ? "text-green-500"
-                    : match.status === "Scheduled"
-                    ? "text-yellow-500"
-                    : "text-gray-500";
 
-                const team1Score = match.team1Score ?? null;
-                const team2Score = match.team2Score ?? null;
-
-                const winner =
-                  match.status === "Completed" &&
-                  team1Score !== null &&
-                  team2Score !== null
-                    ? team1Score > team2Score
-                      ? team1?.teamName
-                      : team2?.teamName
-                    : null;
+                const team1Score = match.team1Score ?? 0;
+                const team2Score = match.team2Score ?? 0;
 
                 return (
                   <div
                     key={match.matchId}
-                    className="flex flex-col md:flex-row justify-between items-center  p-6 rounded-xl shadow-xl border transform hover:scale-105 transition-transform duration-300"
+                    onClick={() => handleMatchClick(match)}
+                    className={`flex flex-col items-center p-6 rounded-xl shadow-lg border bg-white ${!isPublicView ? "transform hover:scale-105 transition-transform duration-300 cursor-pointer" : ""}`}
                   >
-                    <div className="flex items-center gap-6">
+                    <div className="flex flex-col items-center w-full mb-4">
+                      <div className="flex items-center justify-center gap-4 mb-2 text-sm">
+                        <div className="flex items-center gap-1 text-gray-600">
+                          <EnvironmentOutlined />
+                          {match.venue ? (
+                            <span>{match.venue}</span>
+                          ) : (
+                            <span className="text-gray-400">No Venue</span>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-1 text-gray-600">
+                          <CalendarOutlined />
+                          {match.schedule ? (
+                            <span>{dateStringFormatter(match.schedule)}</span>
+                          ) : (
+                            <span className="text-gray-400">No Schedule</span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between w-full px-4">
                       <div className="flex flex-col items-center">
                         {team1 && team1.teamLogo ? (
                           <img
@@ -71,9 +99,14 @@ const RoundRobinBracket: React.FC<RoundRobinHooksProps> = ({ matches, teams }) =
                             <span className="text-gray-500">N/A</span>
                           </div>
                         )}
-                        <span className="font-semibold text-center mt-2 text-gray-700">
-                          {team1?.teamName || "Unknown Team 1"}
-                        </span>
+                        <div className="flex flex-col items-center mt-2">
+                          <span className="font-semibold text-center text-gray-700">
+                            {team1?.teamName || "Unknown Team 1"}
+                          </span>
+                          <span className="text-gray-700 font-bold">
+                            Score: {team1Score}
+                          </span>
+                        </div>
                       </div>
                       <span className="text-2xl font-bold text-gray-700">
                         VS
@@ -90,39 +123,22 @@ const RoundRobinBracket: React.FC<RoundRobinHooksProps> = ({ matches, teams }) =
                             <span className="text-gray-500">N/A</span>
                           </div>
                         )}
-                        <span className="font-semibold text-center mt-2 text-gray-700">
-                          {team2?.teamName || "Unknown Team 2"}
-                        </span>
+                        <div className="flex flex-col items-center mt-2">
+                          <span className="font-semibold text-center text-gray-700">
+                            {team2?.teamName || "Unknown Team 2"}
+                          </span>
+                          <span className="text-gray-700 font-bold">
+                            Score: {team2Score}
+                          </span>
+                        </div>
                       </div>
-                    </div>
-                    <div className="flex flex-col items-end mt-4 md:mt-0">
-                      <span
-                        className={`font-semibold ${statusClass} text-lg`}
-                      >
-                        Status: {match.status || "Pending"}
-                      </span>
-                      {team1Score !== null && team2Score !== null && (
-                        <span className="text-gray-700 font-bold text-lg">
-                          Score: {team1Score} - {team2Score}
-                        </span>
-                      )}
-                      {winner && (
-                        <span className="text-green-500 font-semibold text-lg mt-2">
-                          Winner: {winner}
-                        </span>
-                      )}
-                      {match.schedule && (
-                        <span className="text-gray-600 font-medium mt-2">
-                          Scheduled: {dateStringFormatter(match.schedule)}
-                        </span>
-                      )}
                     </div>
                   </div>
                 );
               })}
             </div>
           </div>
-        )})}
+        ))}
       </div>
     </div>
   );

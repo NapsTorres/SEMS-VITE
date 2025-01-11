@@ -1,7 +1,9 @@
 import React from "react";
 import useDoubleEliminationHooks from "./useDoubleEliminationHooks";
 import { DoubleEliminationHooksProps } from "../../types";
-import MatchComponent from "./matchComponent";
+import MatchCard from "./matchupCard";
+import { CalendarOutlined, EnvironmentOutlined } from "@ant-design/icons";
+import { dateStringFormatter } from "../../utility/utils";
 
 const DoubleEliminationBracket: React.FC<DoubleEliminationHooksProps> = ({
   matches,
@@ -14,8 +16,41 @@ const DoubleEliminationBracket: React.FC<DoubleEliminationHooksProps> = ({
     finalRound,
     finalRematchRound,
     findTeamById,
-    handleScheduleClick,
   } = useDoubleEliminationHooks({ matches, teams });
+
+  const renderMatch = (match: any) => (
+    <div key={match.matchId} className="match-container">
+      <div className="flex items-center justify-center gap-4 mb-2 text-sm">
+        <div className="flex items-center gap-1 text-gray-600">
+          <EnvironmentOutlined />
+          {match.venue ? (
+            <span>{match.venue}</span>
+          ) : (
+            <span className="text-gray-400">No Venue</span>
+          )}
+        </div>
+        <div className="flex items-center gap-1 text-gray-600">
+          <CalendarOutlined />
+          {match.schedule ? (
+            <span>{dateStringFormatter(match.schedule)}</span>
+          ) : (
+            <span className="text-gray-400">No Schedule</span>
+          )}
+        </div>
+      </div>
+      <MatchCard
+        matchId={match.matchId}
+        status={match.status}
+        winnerTeamId={match.winner_team_id}
+        team1={findTeamById(match.team1Id)}
+        team2={findTeamById(match.team2Id)}
+        team1Score={match.team1Score}
+        team2Score={match.team2Score}
+        schedule={match.schedule}
+        venue={match.venue}
+      />
+    </div>
+  );
 
   return (
     <div className="space-y-6">
@@ -25,18 +60,10 @@ const DoubleEliminationBracket: React.FC<DoubleEliminationHooksProps> = ({
         <div className="bracket-grid grid grid-cols-6 gap-4">
           {Object.keys(winnersRounds).map((round, index) => (
             <div key={round} className="round-column flex flex-col space-y-4">
-              {/* Round Title only once per column */}
               <h3 className="round-title text-lg font-semibold text-center">
                 Round {index + 1}
               </h3>
-              {winnersRounds[Number(round)].map((match) => (
-                <MatchComponent
-                  key={match.matchId}
-                  match={match}
-                  findTeamById={findTeamById}
-                  onScheduleClick={handleScheduleClick}
-                />
-              ))}
+              {winnersRounds[Number(round)].map((match) => renderMatch(match))}
             </div>
           ))}
         </div>
@@ -54,14 +81,7 @@ const DoubleEliminationBracket: React.FC<DoubleEliminationHooksProps> = ({
             <h3 className="round-title text-lg font-semibold text-center">Final</h3>
             {Object.keys(finalRound).map((round) => (
               <div key={round}>
-                {finalRound[Number(round)].map((match) => (
-                  <MatchComponent
-                    key={match.matchId}
-                    match={match}
-                    findTeamById={findTeamById}
-                    onScheduleClick={handleScheduleClick}
-                  />
-                ))}
+                {finalRound[Number(round)].map((match) => renderMatch(match))}
               </div>
             ))}
           </div>
@@ -71,14 +91,7 @@ const DoubleEliminationBracket: React.FC<DoubleEliminationHooksProps> = ({
             <h3 className="round-title text-lg font-semibold text-center">Final Rematch</h3>
             {Object.keys(finalRematchRound).map((round) => (
               <div key={round}>
-                {finalRematchRound[Number(round)].map((match) => (
-                  <MatchComponent
-                    key={match.matchId}
-                    match={match}
-                    findTeamById={findTeamById}
-                    onScheduleClick={handleScheduleClick}
-                  />
-                ))}
+                {finalRematchRound[Number(round)].map((match) => renderMatch(match))}
               </div>
             ))}
           </div>
@@ -94,18 +107,10 @@ const DoubleEliminationBracket: React.FC<DoubleEliminationHooksProps> = ({
         <div className="bracket-grid grid grid-cols-6 gap-4">
           {Object.keys(losersRounds).map((round, index) => (
             <div key={round} className="round-column flex flex-col space-y-4">
-              {/* Round Title only once per column */}
               <h3 className="round-title text-lg font-semibold text-center">
                 Round {index + 1}
               </h3>
-              {losersRounds[Number(round)].map((match) => (
-                <MatchComponent
-                  key={match.matchId}
-                  match={match}
-                  findTeamById={findTeamById}
-                  onScheduleClick={handleScheduleClick}
-                />
-              ))}
+              {losersRounds[Number(round)].map((match) => renderMatch(match))}
             </div>
           ))}
         </div>

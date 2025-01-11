@@ -653,8 +653,7 @@ const generateDoubleEliminationMatches = async (sportEventsId, teams, sportsId) 
   }
 };
 
-const generateRoundRobinMatches = async (sportEventsId, teams,sportsId) => {
-
+const generateRoundRobinMatches = async (sportEventsId, teams, sportsId) => {
   const bracketQuery =
     "INSERT INTO brackets (sportsId, bracketType, isElimination) VALUES (?, ?, ?)";
   const matchQuery =
@@ -662,7 +661,7 @@ const generateRoundRobinMatches = async (sportEventsId, teams,sportsId) => {
 
   const [bracketResult] = await db
     .promise()
-    .query(bracketQuery, [sportsId, "Round Robin Bracket", false]);
+    .query(bracketQuery, [sportEventsId, "Round Robin Bracket", false]);
   const bracket_id = bracketResult.insertId;
 
   const numTeams = teams.length;

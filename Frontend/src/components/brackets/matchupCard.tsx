@@ -10,6 +10,8 @@ interface MatchCardProps {
   matchId: number;
   team1Score?: number | null;
   team2Score?: number | null;
+  schedule?: string | null;
+  venue?: string | null;
 }
 
 const MatchCard: React.FC<MatchCardProps> = ({
@@ -20,15 +22,49 @@ const MatchCard: React.FC<MatchCardProps> = ({
   matchId, 
   team1Score,
   team2Score,
+  schedule,
+  venue,
 }) => {
   const navigate = useNavigate();
   const isTeam1Winner = team1 && winnerTeamId === team1.teamId;
   const isTeam2Winner = team2 && winnerTeamId === team2.teamId;
 
   const handleClick = () => {
-    if (status !== "completed") {
-      navigate(`/Game-Scoring/match/${matchId}`);
+    if (status === "completed") {
+      return; // Don't do anything for completed matches
     }
+    
+    console.log('Schedule:', schedule);
+    console.log('Venue:', venue);
+    
+    // Check if schedule and venue are properly set
+    const hasSchedule = schedule !== null && schedule !== undefined && schedule !== "";
+    const hasVenue = venue !== null && venue !== undefined && venue !== "" && venue !== "Not Set";
+    
+    // If match hasn't been scheduled or no venue set, go to Game Schedule
+    if (!hasSchedule || !hasVenue) {
+      console.log('Going to schedule form because:', {
+        noSchedule: !hasSchedule,
+        noVenue: !hasVenue
+      });
+      navigate('/Game-Schedule', {
+        state: { 
+          openScheduleForm: true,
+          matchId: matchId,
+          team1Name: team1?.teamName,
+          team2Name: team2?.teamName,
+          team1Id: team1?.teamId,
+          team2Id: team2?.teamId,
+          currentSchedule: schedule || "",
+          currentVenue: venue || ""
+        }
+      });
+      return;
+    }
+    
+    // If match has schedule and venue, go to scoring page
+    console.log('Going to scoring page');
+    navigate(`/Game-Scoring/match/${matchId}`);
   };
 
   return (

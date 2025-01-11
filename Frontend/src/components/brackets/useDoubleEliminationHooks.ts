@@ -45,10 +45,6 @@ export default function useDoubleEliminationHooks({ matches, teams }: DoubleElim
     }
   };
 
-  const handleScheduleClick = (match: Match) => {
-    setModalState((prev) => ({ ...prev, selectedMatch: match, isScheduleModalVisible: true }));
-  };
-
   const handleScoreSubmit = () => {
     const { selectedMatch } = modalState;
     if (selectedMatch && scores.team1Score !== null && scores.team2Score !== null) {
@@ -100,8 +96,8 @@ export default function useDoubleEliminationHooks({ matches, teams }: DoubleElim
     ? findTeamById(finalMatch.winner_team_id) 
     : null;
   
-  
   const finalMatchBrackets = matches?.filter((match) => match.bracketType !== 'losers' && match.bracketType !== 'winners');
+  
   return {
     modalState,
     scores,
@@ -118,7 +114,6 @@ export default function useDoubleEliminationHooks({ matches, teams }: DoubleElim
     setModalState,
     findTeamById,
     handleMatchClick,
-    handleScheduleClick,
     handleScoreSubmit,
     handleScheduleSubmit,
   };

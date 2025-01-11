@@ -66,7 +66,12 @@ const BracketSection: React.FC<{ matches: any, teams: any, bracketType: any }> =
     <section className='z-20 relative' style={{ backgroundColor: '#e9ece4' }}>
       <div className='absolute w-full h-full z-40' />
       <div className="p-4">
-        <MainBracket matches={matches} teams={teams} bracketType={bracketType} />
+        <MainBracket
+          matches={matches}
+          teams={teams}
+          bracketType={bracketType}
+          isPublicView={true}
+        />
       </div>
     </section>
   )

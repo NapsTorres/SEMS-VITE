@@ -5,7 +5,7 @@ import { dateStringFormatter } from "../../utility/utils";
 import { Match, Team } from "../../types";
 
 interface MatchComponentProps {
-  match: any;
+  match: Match;
   findTeamById: (id: number | null) => Team | null;
   onScheduleClick: (match: Match) => void;
 }
@@ -26,6 +26,8 @@ const MatchComponent: React.FC<MatchComponentProps> = ({ match, findTeamById }) 
         team2={findTeamById(match.team2Id)}
         team1Score={match.team1Score}
         team2Score={match.team2Score}
+        schedule={match.schedule}
+        venue={match.venue}
       />
     </div>
   );
