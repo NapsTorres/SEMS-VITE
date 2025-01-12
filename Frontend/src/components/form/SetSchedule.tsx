@@ -44,9 +44,9 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
   const handleSubmit = async () => {
     try {
       await form.validateFields();
-      onCancel(); // Close the modal first
-      handleScheduleSubmit(); // Then handle the submission
+      handleScheduleSubmit(); // Handle the submission first
       form.resetFields();
+      onCancel(); // Then close the modal
     } catch (error) {
       console.error('Validation failed:', error);
     }

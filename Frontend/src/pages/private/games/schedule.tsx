@@ -61,8 +61,8 @@ export const GameSchedule = () => {
 
   // Get event dates for the selected match
   const getEventDates = () => {
-    if (!selectedMatch?.event?.eventId) return { startDate: undefined, endDate: undefined };
-    const event = events?.find((e: Events) => e.eventId === selectedMatch.event.eventId);
+    if (eventFilter === 'all') return { startDate: undefined, endDate: undefined };
+    const event = events?.find((e: Events) => e.eventName === eventFilter);
     return {
       startDate: event?.eventStartDate,
       endDate: event?.eventEndDate

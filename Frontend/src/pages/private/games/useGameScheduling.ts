@@ -78,12 +78,13 @@ const useGameSchedule = () => {
         venue
       });
       
-      message.success('Schedule updated successfully');
+      // Reset all states first
       setScheduleModalVisible(false);
-      // Reset form values
       setSchedule("");
       setVenue("");
       setSelectedMatch(null);
+      
+      message.success('Schedule updated successfully');
       refetch(); // Refresh the matches data
     } catch (error) {
       message.error('Failed to update schedule');
@@ -133,14 +134,13 @@ const useGameSchedule = () => {
     if (!Match) return [];
 
     const filtered = Match.filter((match: any) => {
-      const hasSched = match.schedule !== "" && match.schedule !== null;
       const statusMatch = statusFilter === "all" || match.status === statusFilter;
       const roundMatch = roundFilter === "all" || match.round.toString() === roundFilter;
       const eventMatch = eventFilter === "all" || match.event.eventName === eventFilter;
       const sportMatch = sportFilter === "all" || match.sport.sportsName === sportFilter;
       const dateMatch = !dateFilter || new Date(match.schedule).toISOString().split('T')[0] === dateFilter;
 
-      return statusMatch && roundMatch && eventMatch && sportMatch && dateMatch && hasSched;
+      return statusMatch && roundMatch && eventMatch && sportMatch && dateMatch;
     });
 
     // First show all unscheduled matches sorted by round, then all scheduled matches
