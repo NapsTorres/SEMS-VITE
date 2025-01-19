@@ -20,7 +20,7 @@ const SingleEliminationBracket: React.FC<SingleEliminationBracketProps> = ({ mat
             <h3 className="round-title">Round {round}</h3>
             {rounds[Number(round)].map((match) => (
               <div key={match.matchId} className="match-container">
-                <div className="flex items-center justify-center gap-4 mb-2 text-sm">
+                <div className="flex items-center justify-start gap-4 mb-2 text-sm">
                   <div className="flex items-center gap-1 text-gray-600">
                     <EnvironmentOutlined />
                     {match.venue ? (

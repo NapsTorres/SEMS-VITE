@@ -16,16 +16,13 @@ import { CiLocationOn } from "react-icons/ci";
 import moment from "moment";
 import { useLocation } from "react-router-dom";
 import { useEffect } from "react";
-import { useFetchData } from "../../../config/axios/requestData";
-import EventsServices from "../../../config/service/events";
-import { Events } from "../../../types";
 
 const { Option } = Select;
 const { Text } = Typography;
 
 export const GameSchedule = () => {
   const location = useLocation();
-  const { openScheduleForm, matchId, team1Name, team2Name, team1Id, team2Id, currentSchedule, currentVenue } = location.state || {};
+  const { openScheduleForm, matchId, team1Name, team2Name, team1Id, team2Id, currentSchedule, currentVenue, highlightMatchId } = location.state || {};
 
   const {
     isFetchingMatch,
@@ -54,20 +51,8 @@ export const GameSchedule = () => {
     setVenue,
     statusFilter,
     setStatusFilter,
+    getEventDates,
   } = useGameSchedule();
-
-  // Fetch events data
-  const { data: events } = useFetchData(["Events"], [() => EventsServices.fetchEvents()]);
-
-  // Get event dates for the selected match
-  const getEventDates = () => {
-    if (eventFilter === 'all') return { startDate: undefined, endDate: undefined };
-    const event = events?.find((e: Events) => e.eventName === eventFilter);
-    return {
-      startDate: event?.eventStartDate,
-      endDate: event?.eventEndDate
-    };
-  };
 
   // Handle auto-opening schedule modal when navigating from matchup card
   useEffect(() => {
@@ -82,6 +67,25 @@ export const GameSchedule = () => {
       openScheduleModal(match);
     }
   }, [openScheduleForm, matchId]);
+
+  // Auto-navigate to the correct page and scroll to highlighted match
+  useEffect(() => {
+    if (highlightMatchId && filteredMatches.length > 0) {
+      const matchIndex = filteredMatches.findIndex((match) => match.matchId === highlightMatchId);
+      if (matchIndex !== -1) {
+        const targetPage = Math.floor(matchIndex / matchesPerPage) + 1;
+        handlePageChange(targetPage);
+        
+        // Wait for the table to update, then scroll to the highlighted row
+        setTimeout(() => {
+          const highlightedRow = document.querySelector(`tr[data-row-key="${highlightMatchId}"]`);
+          if (highlightedRow) {
+            highlightedRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }
+        }, 100);
+      }
+    }
+  }, [highlightMatchId, filteredMatches]);
 
   const getStatusTag = (status: string) => {
     switch (status) {
@@ -186,8 +190,6 @@ export const GameSchedule = () => {
     return <Spin size="large" />;
   }
 
-  const { startDate, endDate } = getEventDates();
-
   return (
     <div className="p-5">
       <div className="flex justify-center items-center mb-4">
@@ -278,6 +280,10 @@ export const GameSchedule = () => {
         dataSource={paginatedMatches}
         columns={columns}
         rowKey="matchId"
+        className="mt-4"
+        rowClassName={(record) => 
+          record.matchId === highlightMatchId ? 'bg-green-200 hover:bg-green-300' : ''
+        }
         pagination={{
           current: currentPage,
           total: filteredMatches.length,
@@ -285,7 +291,6 @@ export const GameSchedule = () => {
           onChange: handlePageChange,
           showSizeChanger: false,
         }}
-        className="mt-4"
       />
 
       {selectedMatch && (
@@ -298,8 +303,8 @@ export const GameSchedule = () => {
           handleScheduleSubmit={() => handleScheduleSubmit(selectedMatch)}
           onCancel={() => setScheduleModalVisible(false)}
           isSubmitting={false}
-          eventStartDate={startDate}
-          eventEndDate={endDate}
+          eventStartDate={getEventDates(selectedMatch).startDate}
+          eventEndDate={getEventDates(selectedMatch).endDate}
         />
       )}
     </div>

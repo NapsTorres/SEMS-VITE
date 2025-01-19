@@ -34,36 +34,21 @@ const MatchCard: React.FC<MatchCardProps> = ({
       return; // Don't do anything for completed matches
     }
     
-    console.log('Schedule:', schedule);
-    console.log('Venue:', venue);
-    
     // Check if schedule and venue are properly set
     const hasSchedule = schedule !== null && schedule !== undefined && schedule !== "";
     const hasVenue = venue !== null && venue !== undefined && venue !== "" && venue !== "Not Set";
     
     // If match hasn't been scheduled or no venue set, go to Game Schedule
     if (!hasSchedule || !hasVenue) {
-      console.log('Going to schedule form because:', {
-        noSchedule: !hasSchedule,
-        noVenue: !hasVenue
-      });
       navigate('/Game-Schedule', {
         state: { 
-          openScheduleForm: true,
-          matchId: matchId,
-          team1Name: team1?.teamName,
-          team2Name: team2?.teamName,
-          team1Id: team1?.teamId,
-          team2Id: team2?.teamId,
-          currentSchedule: schedule || "",
-          currentVenue: venue || ""
+          highlightMatchId: matchId,
         }
       });
       return;
     }
     
     // If match has schedule and venue, go to scoring page
-    console.log('Going to scoring page');
     navigate(`/Game-Scoring/match/${matchId}`);
   };
 
@@ -76,8 +61,10 @@ const MatchCard: React.FC<MatchCardProps> = ({
           : "cursor-pointer bg-white hover:bg-gray-50"
       }`}
     >
-      <div className="text-gray-500 text-sm font-semibold">
-        Match ID: {matchId}
+      <div className="flex justify-between w-full">
+        <div className="text-gray-500 text-sm font-semibold">
+          Match ID: {matchId}
+        </div>
       </div>
 
       <div className="flex items-center gap-4 justify-between w-full">

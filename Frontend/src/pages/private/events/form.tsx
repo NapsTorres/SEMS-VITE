@@ -2,6 +2,7 @@ import React from 'react';
 import { Button, DatePicker, Form, FormInstance, Input } from 'antd';
 import { Events } from '../../../types';
 import CustomTextEditor from '../../../components/inputs/customEditor';
+import dayjs from 'dayjs';
 
 interface EventsFormProps {
   form: FormInstance;
@@ -24,6 +25,11 @@ const EventsForm: React.FC<EventsFormProps> = ({
       description: values.description || ''
     };
     handleAddOrEditEvent(formattedValues);
+  };
+
+  // Function to disable past dates
+  const disablePastDates = (current: dayjs.Dayjs) => {
+    return current && current.isBefore(dayjs().startOf('day'));
   };
 
   return (
@@ -50,7 +56,10 @@ const EventsForm: React.FC<EventsFormProps> = ({
         rules={[{ required: true, message: 'Please set Start Date of event!' }]}
         className='flex-1'
       >
-        <DatePicker className='w-full' />
+        <DatePicker 
+          className='w-full' 
+          disabledDate={disablePastDates}
+        />
       </Form.Item>
       <Form.Item
         name="eventendDate"
@@ -58,7 +67,10 @@ const EventsForm: React.FC<EventsFormProps> = ({
         rules={[{ required: true, message: 'Please set End Date of event!' }]}
         className='flex-1'
       >
-        <DatePicker className='w-full' />
+        <DatePicker 
+          className='w-full'
+          disabledDate={disablePastDates}
+        />
       </Form.Item>
       </div>
       <Form.Item label='Description' name='description'>

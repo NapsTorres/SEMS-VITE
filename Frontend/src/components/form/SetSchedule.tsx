@@ -58,11 +58,6 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
   };
 
   const disabledDate = (current: Dayjs) => {
-    // Always prevent past dates
-    if (current && current.isBefore(dayjs().startOf('day'))) {
-      return true;
-    }
-
     // If event dates are set, restrict to those dates
     if (eventStartDate && eventEndDate) {
       const start = dayjs(eventStartDate).startOf('day');
@@ -70,7 +65,7 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
       return current.isBefore(start) || current.isAfter(end);
     }
 
-    // If no event dates are set, only prevent past dates
+    // If no event dates are set, allow all dates
     return false;
   };
 

@@ -2,6 +2,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { useFetchData } from "../../../config/axios/requestData";
 import GamesServices from "../../../config/service/games";
+import EventsServices from "../../../config/service/events";
 import { message } from "antd";
 import moment from "moment";
 import { useLocation } from "react-router-dom";
@@ -48,6 +49,7 @@ const useGameSchedule = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const { data: Match, isLoading: isFetchingMatch, refetch } = useFetchData(["Game"], [GamesServices.gameSchedule]);
+  const { data: events } = useFetchData(["Events"], [() => EventsServices.fetchEvents()]);
 
   // Handle location state for auto-opening schedule form
   useEffect(() => {
@@ -92,6 +94,16 @@ const useGameSchedule = () => {
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  // Get event dates for the selected match
+  const getEventDates = (match: any) => {
+    if (!match?.event?.eventId) return { startDate: undefined, endDate: undefined };
+    const event = events?.find((e: any) => e.eventId === match.event.eventId);
+    return {
+      startDate: event?.eventStartDate,
+      endDate: event?.eventEndDate
+    };
   };
 
   // Open schedule modal
@@ -209,7 +221,8 @@ const useGameSchedule = () => {
     openScheduleModal,
     handlePageChange,
     setSchedule,
-    setVenue
+    setVenue,
+    getEventDates
   };
 };
 

@@ -20,7 +20,7 @@ const DoubleEliminationBracket: React.FC<DoubleEliminationHooksProps> = ({
 
   const renderMatch = (match: any) => (
     <div key={match.matchId} className="match-container">
-      <div className="flex items-center justify-center gap-4 mb-2 text-sm">
+      <div className="flex items-center justify-start gap-4 mb-2 text-sm">
         <div className="flex items-center gap-1 text-gray-600">
           <EnvironmentOutlined />
           {match.venue ? (
