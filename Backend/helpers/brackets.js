@@ -62,7 +62,7 @@ const generateSingleEliminationMatches = async (
 
   const [bracketResult] = await db
     .promise()
-    .query(bracketQuery, [sportsId, "Single Elimination Bracket", true]);
+    .query(bracketQuery, [sportEventsId, "Single Elimination Bracket", true]);
   const bracket_id = bracketResult.insertId;
 
   const matchIdMap = new Map(); // To store match IDs for reference
@@ -252,13 +252,13 @@ const generateDoubleEliminationMatches = async (sportEventsId, teams, sportsId) 
   // Create brackets
   const [winnerBracketResult] = await db
     .promise()
-    .query(bracketQuery, [sportsId, "Winner Bracket", true]);
+    .query(bracketQuery, [sportEventsId, "Winner Bracket", true]);
   const [loserBracketResult] = await db
     .promise()
-    .query(bracketQuery, [sportsId, "Loser Bracket", true]);
+    .query(bracketQuery, [sportEventsId, "Loser Bracket", true]);
   const [finalRematchBracketResult] = await db
     .promise()
-    .query(bracketQuery, [sportsId, "Final Rematch", true]);
+    .query(bracketQuery, [sportEventsId, "Final Rematch", true]);
 
   const winner_bracket_id = winnerBracketResult.insertId;
   const loser_bracket_id = loserBracketResult.insertId;
@@ -814,11 +814,6 @@ async function checkForChampion(winnerTeamId, loserTeamId, match) {
     bracketType
   ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `;
-
-  // Update standings for final matches
-  if (match.isFinal && match.status === "completed") {
-    await updateTeamStanding(winnerTeamId, loserTeamId, match.sportEventsId);
-  }
 
   if (match.isFinal && match.bracketType === "final") {
     if (loserTeamId && ((match.team1stat === "winnerBracket" && match.team1Id === loserTeamId) ||
