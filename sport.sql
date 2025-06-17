@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Dec 16, 2024 at 12:32 PM
+-- Generation Time: Jun 17, 2025 at 09:45 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -35,6 +35,15 @@ CREATE TABLE `brackets` (
   `createdAt` timestamp NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Dumping data for table `brackets`
+--
+
+INSERT INTO `brackets` (`barcketId`, `sportsId`, `bracketType`, `isElimination`, `createdAt`) VALUES
+(1, 1, 'Single Elimination Bracket', 1, '2025-01-08 08:52:39'),
+(2, 2, 'Single Elimination Bracket', 1, '2025-01-08 09:19:21'),
+(3, 1, 'Single Elimination Bracket', 1, '2025-01-09 13:31:18');
+
 -- --------------------------------------------------------
 
 --
@@ -52,6 +61,16 @@ CREATE TABLE `events` (
   `createdBy` int(11) NOT NULL,
   `updatedBy` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `events`
+--
+
+INSERT INTO `events` (`eventId`, `eventName`, `eventYear`, `eventstartDate`, `eventendDate`, `createdAt`, `description`, `createdBy`, `updatedBy`) VALUES
+(1, 'NCF Intramurals 2024', 2025, '2025-02-15', '2025-02-18', '2025-01-08 08:50:38', '<p>undefined</p>', 2, 2),
+(2, 'Intramurals 2025', 0, '2025-01-09', '2025-01-09', '2025-01-09 13:13:41', 'undefined', 2, 0),
+(3, 'Intramurals 2024', 0, '2025-01-09', '2025-01-09', '2025-01-09 13:38:00', 'undefined', 2, 0),
+(4, 'Intramurals 2026', 0, '2025-01-09', '2025-01-09', '2025-01-09 13:40:10', '', 2, 0);
 
 -- --------------------------------------------------------
 
@@ -83,6 +102,33 @@ CREATE TABLE `matches` (
   `team2stat` varchar(255) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Dumping data for table `matches`
+--
+
+INSERT INTO `matches` (`matchId`, `sportEventsId`, `bracketId`, `round`, `team1Id`, `team2Id`, `status`, `winner_team_id`, `schedule`, `completedAt`, `isFinal`, `next_match_id`, `loser_next_match_id`, `team1Score`, `team2Score`, `roundType`, `bracketType`, `eliminationStage`, `venue`, `team1stat`, `team2stat`) VALUES
+(1, 1, 1, 1, 1, 2, 'completed', 1, '2025-01-08 08:52:27', NULL, 0, 5, NULL, 3, 0, NULL, NULL, NULL, 'Court', NULL, NULL),
+(2, 1, 1, 1, 3, 4, 'completed', 3, '2025-01-08 08:52:29', NULL, 0, 5, NULL, 3, 0, NULL, NULL, NULL, 'Court', NULL, NULL),
+(3, 1, 1, 1, 5, 6, 'completed', 5, '2025-01-09 20:59:53', NULL, 0, 6, NULL, 3, 2, NULL, NULL, NULL, 'Court', NULL, NULL),
+(4, 1, 1, 1, 7, 8, 'pending', 0, NULL, NULL, 0, 6, NULL, 0, 0, NULL, NULL, NULL, NULL, NULL, NULL),
+(5, 1, 1, 2, 1, 3, 'pending', 0, NULL, NULL, 0, 7, NULL, 0, 0, NULL, NULL, NULL, NULL, NULL, NULL),
+(6, 1, 1, 2, 5, NULL, 'pending', 0, NULL, NULL, 0, 7, NULL, 0, 0, NULL, NULL, NULL, NULL, NULL, NULL),
+(7, 1, 1, 3, NULL, NULL, 'pending', 0, NULL, NULL, 1, NULL, NULL, 0, 0, NULL, NULL, NULL, NULL, NULL, NULL),
+(8, 2, 2, 1, 1, 2, 'completed', 1, '2025-01-08 09:18:50', NULL, 0, 12, NULL, 3, 0, NULL, NULL, NULL, NULL, NULL, NULL),
+(9, 2, 2, 1, 3, 4, 'pending', 0, '2025-01-08 09:18:53', NULL, 0, 12, NULL, 0, 0, NULL, NULL, NULL, NULL, NULL, NULL),
+(10, 2, 2, 1, 5, 6, 'pending', 0, '2025-01-08 09:18:55', NULL, 0, 13, NULL, 0, 0, NULL, NULL, NULL, NULL, NULL, NULL),
+(11, 2, 2, 1, 7, 8, 'completed', 7, '2025-01-08 09:18:57', NULL, 0, 13, NULL, 6, 0, NULL, NULL, NULL, NULL, NULL, NULL),
+(12, 2, 2, 2, 1, NULL, 'pending', 0, NULL, NULL, 0, 14, NULL, 0, 0, NULL, NULL, NULL, NULL, NULL, NULL),
+(13, 2, 2, 2, 7, NULL, 'pending', 0, NULL, NULL, 0, 14, NULL, 0, 0, NULL, NULL, NULL, NULL, NULL, NULL),
+(14, 2, 2, 3, NULL, NULL, 'pending', 0, NULL, NULL, 1, NULL, NULL, 0, 0, NULL, NULL, NULL, NULL, NULL, NULL),
+(15, 3, 3, 1, 1, 2, 'scheduled', 0, '2025-01-09 22:56:24', NULL, 0, 19, NULL, 0, 0, NULL, NULL, NULL, 'Court', NULL, NULL),
+(16, 3, 3, 1, 3, 4, 'pending', 0, NULL, NULL, 0, 19, NULL, 0, 0, NULL, NULL, NULL, NULL, NULL, NULL),
+(17, 3, 3, 1, 5, 6, 'pending', 0, NULL, NULL, 0, 20, NULL, 0, 0, NULL, NULL, NULL, NULL, NULL, NULL),
+(18, 3, 3, 1, 7, 8, 'pending', 0, NULL, NULL, 0, 20, NULL, 0, 0, NULL, NULL, NULL, NULL, NULL, NULL),
+(19, 3, 3, 2, NULL, NULL, 'pending', 0, NULL, NULL, 0, 21, NULL, 0, 0, NULL, NULL, NULL, NULL, NULL, NULL),
+(20, 3, 3, 2, NULL, NULL, 'pending', 0, NULL, NULL, 0, 21, NULL, 0, 0, NULL, NULL, NULL, NULL, NULL, NULL),
+(21, 3, 3, 3, NULL, NULL, 'pending', 0, NULL, NULL, 1, NULL, NULL, 0, 0, NULL, NULL, NULL, NULL, NULL, NULL);
+
 -- --------------------------------------------------------
 
 --
@@ -113,11 +159,20 @@ CREATE TABLE `players` (
   `playerName` longtext NOT NULL,
   `medicalCertificate` longtext NOT NULL,
   `status` varchar(255) NOT NULL DEFAULT 'pending',
+  `remarks` text DEFAULT NULL,
   `addedBy` int(11) DEFAULT NULL,
   `updatedBy` int(11) DEFAULT NULL,
   `updatedAt` timestamp NULL DEFAULT NULL ON UPDATE current_timestamp(),
   `createdAt` timestamp NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `players`
+--
+
+INSERT INTO `players` (`playerId`, `teamEventId`, `playerName`, `medicalCertificate`, `status`, `remarks`, `addedBy`, `updatedBy`, `updatedAt`, `createdAt`) VALUES
+(1, 1, 'Naps', 'https://ik.imagekit.io/ghqmiuwd9/1750146250926_1739256469816_Free-Medical-Certificate-Template_78SpU2Vgy_lMGx_q8TE.jpg', 'pending', NULL, NULL, NULL, '2025-06-17 07:44:13', '2025-01-08 11:08:47'),
+(2, 1, 'Naps11', 'https://ik.imagekit.io/ghqmiuwd9/1750146262291_1739256469816_Free-Medical-Certificate-Template_78SpU2Vgy_kbiothvb_.jpg', 'pending', NULL, NULL, NULL, '2025-06-17 07:44:24', '2025-02-11 06:47:52');
 
 -- --------------------------------------------------------
 
@@ -140,17 +195,17 @@ CREATE TABLE `sports` (
 --
 
 INSERT INTO `sports` (`sportsId`, `sportsName`, `sportsLogo`, `description`, `createdAt`, `createdBy`, `updatedBy`) VALUES
-(1, 'Basketball-M', 'https://ik.imagekit.io/ghqmiuwd9/1734347923920_basketball_EKSXn2ZAX.png', '<p>Basketball Men\'s Category</p>', '2024-12-16 11:18:47', 1, NULL),
-(2, 'Basketball-W', 'https://ik.imagekit.io/ghqmiuwd9/1734347959856_basketball_7Wqvt5iu_.png', '<p>Basketball Women\'s Category</p>', '2024-12-16 11:19:22', 1, NULL),
-(3, 'Volleyball-M', 'https://ik.imagekit.io/ghqmiuwd9/1734347983160_volleyball_SB2jT0GDx.png', '<p>Volleyball Men\'s Category</p>', '2024-12-16 11:19:45', 1, NULL),
-(4, 'Volleyball-W', 'https://ik.imagekit.io/ghqmiuwd9/1734348013075_volleyball_Op7XVAw7k.png', '<p>Volleyball Women\'s Category</p>', '2024-12-16 11:20:15', 1, NULL),
-(5, 'Badminton-M', 'https://ik.imagekit.io/ghqmiuwd9/1734348071634_image_2024-12-01_094931427-removebg-preview_I-HL-2GcQ.png', '<p>Badminton Men\'s Category</p>', '2024-12-16 11:21:14', 1, 1),
-(6, 'Badminton-W', 'https://ik.imagekit.io/ghqmiuwd9/1734348105165_image_2024-12-01_094931427-removebg-preview_Bz5WO1Yl7.png', '<p>Badminton Women\'s Category</p>', '2024-12-16 11:21:47', 1, NULL),
-(7, 'Table Tennis-M', 'https://ik.imagekit.io/ghqmiuwd9/1734348131002_image_2024-12-01_095420380-removebg-preview_kokxVohxd.png', '<p>Table Tennis Men\'s Category</p>', '2024-12-16 11:22:13', 1, NULL),
-(8, 'Table Tennis-W', 'https://ik.imagekit.io/ghqmiuwd9/1734348156322_image_2024-12-01_095420380-removebg-preview_9nEQKWMlK.png', '<p>Table Tennis Women\'s Category</p>', '2024-12-16 11:22:38', 1, NULL),
-(9, 'Sepak Takraw-M', 'https://ik.imagekit.io/ghqmiuwd9/1734348189345_image_2024-11-25_201753916-removebg-preview_arfR3F5JT.png', '<p>Sepak Takraw Men\'s Category</p>', '2024-12-16 11:23:11', 1, NULL),
-(10, 'Chess-M', 'https://ik.imagekit.io/ghqmiuwd9/1734348221077_image_2024-12-01_095221190-removebg-preview_2se6GkPsl.png', '<p>Chess Men\'s Category</p>', '2024-12-16 11:23:43', 1, NULL),
-(11, 'Chess-W', 'https://ik.imagekit.io/ghqmiuwd9/1734348246856_image_2024-12-01_095221190-removebg-preview_pndQ_DPYe.png', '<p>Chess Women\'s Category</p>', '2024-12-16 11:24:09', 1, NULL);
+(1, 'Basketball-M', 'https://ik.imagekit.io/ghqmiuwd9/1750141266690_basketball_j18EMcdqY.png', '<p>Basketball Men\'s Category</p>', '2024-12-16 11:18:47', 1, 1),
+(2, 'Basketball-W', 'https://ik.imagekit.io/ghqmiuwd9/1750145237967_basketball_aQ1MCam8l.png', '<p>Basketball Women\'s Category</p>', '2024-12-16 11:19:22', 1, 1),
+(3, 'Volleyball-M', 'https://ik.imagekit.io/ghqmiuwd9/1750145250268_volleyball_Wo91iLKGB.png', '<p>Volleyball Men\'s Category</p>', '2024-12-16 11:19:45', 1, 1),
+(4, 'Volleyball-W', 'https://ik.imagekit.io/ghqmiuwd9/1750145265912_volleyball_QdfGbeams.png', '<p>Volleyball Women\'s Category</p>', '2024-12-16 11:20:15', 1, 1),
+(5, 'Badminton-M', 'https://ik.imagekit.io/ghqmiuwd9/1750145621933_badminton-racket-icon-free-vector-removebg-preview_M7XBIpNxL.png', '<p>Badminton Men\'s Category</p>', '2024-12-16 11:21:14', 1, 1),
+(6, 'Badminton-W', 'https://ik.imagekit.io/ghqmiuwd9/1750145639394_badminton-racket-icon-free-vector-removebg-preview_h9LDadw-u.png', '<p>Badminton Women\'s Category</p>', '2024-12-16 11:21:47', 1, 1),
+(7, 'Table Tennis-M', 'https://ik.imagekit.io/ghqmiuwd9/1750145739331_image_2025-06-17_153459784-removebg-preview__1__WiZEoS3N5.png', '<p>Table Tennis Men\'s Category</p>', '2024-12-16 11:22:13', 1, 1),
+(8, 'Table Tennis-W', 'https://ik.imagekit.io/ghqmiuwd9/1750145778638_image_2025-06-17_153459784-removebg-preview_ZApYuTf4X.png', '<p>Table Tennis Women\'s Category</p>', '2024-12-16 11:22:38', 1, 1),
+(9, 'Sepak Takraw-M', 'https://ik.imagekit.io/ghqmiuwd9/1750145817248_image_2025-06-17_153638920-removebg-preview_OGkipXzkU.png', '<p>Sepak Takraw Men\'s Category</p>', '2024-12-16 11:23:11', 1, 1),
+(10, 'Chess-M', 'https://ik.imagekit.io/ghqmiuwd9/1750145916944_image_2025-06-17_153818902-removebg-preview__y6YDtDMZ.png', '<p>Chess Men\'s Category</p>', '2024-12-16 11:23:43', 1, 1),
+(11, 'Chess-W', 'https://ik.imagekit.io/ghqmiuwd9/1750145923425_image_2025-06-17_153818902-removebg-preview_sAZDUmSdK.png', '<p>Chess Women\'s Category</p>', '2024-12-16 11:24:09', 1, 1);
 
 -- --------------------------------------------------------
 
@@ -166,6 +221,15 @@ CREATE TABLE `sports_events` (
   `coachId` int(11) DEFAULT NULL,
   `maxPlayers` int(11) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `sports_events`
+--
+
+INSERT INTO `sports_events` (`sportEventsId`, `sportsId`, `eventsId`, `bracketType`, `coachId`, `maxPlayers`) VALUES
+(1, 1, 1, 'Single Elimination', NULL, 15),
+(2, 2, 1, 'Single Elimination', NULL, 15),
+(3, 1, 2, 'Single Elimination', NULL, 15);
 
 -- --------------------------------------------------------
 
@@ -188,14 +252,14 @@ CREATE TABLE `teams` (
 --
 
 INSERT INTO `teams` (`teamId`, `teamName`, `teamLogo`, `teamCoach`, `dateAdded`, `addedBy`, `updatedBy`) VALUES
-(1, 'College of Computer Study', 'https://ik.imagekit.io/ghqmiuwd9/1734348481101_ccs_knXV7dGHv.png', 3, '2024-12-16 11:28:03', 1, NULL),
-(2, 'College of Art and Science', 'https://ik.imagekit.io/ghqmiuwd9/1734348510368_cas_FQ5WcRDVO.jpg', 4, '2024-12-16 11:28:32', 1, NULL),
-(3, 'College of Criminal Justice Education', 'https://ik.imagekit.io/ghqmiuwd9/1734348534636_ccje_S20BGfu-q.jpg', 5, '2024-12-16 11:28:57', 1, NULL),
-(4, 'College of Teacher Education', 'https://ik.imagekit.io/ghqmiuwd9/1734348560899_cted_MKg1iVOhx.jpg', 6, '2024-12-16 11:29:23', 1, NULL),
-(5, 'College of Accountancy and Finance', 'https://ik.imagekit.io/ghqmiuwd9/1734348576229_caf_oYED7MesB.jpg', 7, '2024-12-16 11:29:38', 1, NULL),
-(6, 'College of Health Science', 'https://ik.imagekit.io/ghqmiuwd9/1734348597107_chs_90_b9G5mH.jpg', 8, '2024-12-16 11:29:59', 1, NULL),
-(7, 'College of Engineering', 'https://ik.imagekit.io/ghqmiuwd9/1734348618565_coe_QVLpytZMm.png', 9, '2024-12-16 11:30:20', 1, NULL),
-(8, 'College of Business Management', 'https://ik.imagekit.io/ghqmiuwd9/1734348636391_cbm_N8jl9ZI27.jpg', 10, '2024-12-16 11:30:38', 1, NULL);
+(1, 'College of Computer Study', 'https://ik.imagekit.io/ghqmiuwd9/1750145954783_ccs_zRYHGSqBs.png', 3, '2024-12-16 11:28:03', 1, 1),
+(2, 'College of Art and Science', 'https://ik.imagekit.io/ghqmiuwd9/1750145969986_cas_5vgixclGl.jpg', 3, '2024-12-16 11:28:32', 1, 1),
+(3, 'College of Criminal Justice Education', 'https://ik.imagekit.io/ghqmiuwd9/1750145986218_ccje_9-EWKpLez.jpg', 4, '2024-12-16 11:28:57', 1, 1),
+(4, 'College of Teacher Education', 'https://ik.imagekit.io/ghqmiuwd9/1750146006703_cted_uONPcDRoj.jpg', 5, '2024-12-16 11:29:23', 1, 1),
+(5, 'College of Accountancy and Finance', 'https://ik.imagekit.io/ghqmiuwd9/1750146054930_caf_QTs_6b1ut.jpg', 6, '2024-12-16 11:29:38', 1, 1),
+(6, 'College of Health Science', 'https://ik.imagekit.io/ghqmiuwd9/1750146071624_chs_6A-g5B83A.jpg', 7, '2024-12-16 11:29:59', 1, 1),
+(7, 'College of Engineering', 'https://ik.imagekit.io/ghqmiuwd9/1750146102910_coe_gINS-hJaa.png', 8, '2024-12-16 11:30:20', 1, 1),
+(8, 'College of Business Management', 'https://ik.imagekit.io/ghqmiuwd9/1750146117703_cbm_ciy4EO9zA.jpg', 9, '2024-12-16 11:30:38', 1, 1);
 
 -- --------------------------------------------------------
 
@@ -212,6 +276,36 @@ CREATE TABLE `teams_events` (
   `teamWin` int(11) DEFAULT 0,
   `teamLose` int(11) DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `teams_events`
+--
+
+INSERT INTO `teams_events` (`teamEventId`, `sportEventsId`, `teamName`, `teamId`, `coachId`, `teamWin`, `teamLose`) VALUES
+(1, 1, 'College of Computer Study', 1, 3, 1, 0),
+(2, 1, 'College of Art and Science', 2, 4, 0, 1),
+(3, 1, 'College of Criminal Justice Education', 3, 5, 1, 0),
+(4, 1, 'College of Teacher Education', 4, 6, 0, 1),
+(5, 1, 'College of Accountancy and Finance', 5, 7, 1, 0),
+(6, 1, 'College of Health Science', 6, 8, 0, 1),
+(7, 1, 'College of Engineering', 7, 9, 0, 0),
+(8, 1, 'College of Business Management', 8, 10, 0, 0),
+(9, 2, 'College of Computer Study', 1, 3, 1, 0),
+(10, 2, 'College of Art and Science', 2, 4, 0, 1),
+(11, 2, 'College of Criminal Justice Education', 3, 5, 0, 0),
+(12, 2, 'College of Teacher Education', 4, 6, 0, 0),
+(13, 2, 'College of Accountancy and Finance', 5, 7, 0, 0),
+(14, 2, 'College of Health Science', 6, 8, 0, 0),
+(15, 2, 'College of Engineering', 7, 9, 1, 0),
+(16, 2, 'College of Business Management', 8, 10, 0, 1),
+(17, 3, 'College of Computer Study', 1, 3, 0, 0),
+(18, 3, 'College of Art and Science', 2, 4, 0, 0),
+(19, 3, 'College of Criminal Justice Education', 3, 5, 0, 0),
+(20, 3, 'College of Teacher Education', 4, 6, 0, 0),
+(21, 3, 'College of Accountancy and Finance', 5, 7, 0, 0),
+(22, 3, 'College of Health Science', 6, 8, 0, 0),
+(23, 3, 'College of Engineering', 7, 9, 0, 0),
+(24, 3, 'College of Business Management', 8, 10, 0, 0);
 
 -- --------------------------------------------------------
 
@@ -243,7 +337,8 @@ INSERT INTO `users` (`id`, `username`, `password`, `type`, `teamId`, `status`, `
 (7, 'CAF', '$2a$10$2EbhKQjTBG3IV.Zms1nTG.uQ6715CesXX9zAODb6f6.42rz5b3Scy', 'Coach', NULL, 'Active', 1),
 (8, 'CHS', '$2a$10$K1NGXFoQrYRPw3zjgCGOEu3mivoEOXqKiBzcalZDTqi7hGgh9Jn8y', 'Coach', NULL, 'Active', 1),
 (9, 'COE', '$2a$10$z/jN7pV5lywv1r9BCVRYhOkJKiylonUE2mNS/x64diTZn0pbuTzjK', 'Coach', NULL, 'Active', 1),
-(10, 'CBM', '$2a$10$nUV2aJDGSODllsq42ipl..8ipLBzQzhESD7AXoy5emklnqRSwoWVi', 'Coach', NULL, 'Active', 1);
+(10, 'CBM', '$2a$10$nUV2aJDGSODllsq42ipl..8ipLBzQzhESD7AXoy5emklnqRSwoWVi', 'Coach', NULL, 'Active', 1),
+(11, 'PNP', '$2a$10$jpFgKyynqjjy3dNzPZLaKeqI8foIc8mdpt3ys11fSorSIYcnnUJ8m', 'Admin', NULL, 'Active', 2);
 
 --
 -- Indexes for dumped tables
@@ -333,43 +428,43 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT for table `brackets`
 --
 ALTER TABLE `brackets`
-  MODIFY `barcketId` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `barcketId` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT for table `events`
 --
 ALTER TABLE `events`
-  MODIFY `eventId` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `eventId` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT for table `matches`
 --
 ALTER TABLE `matches`
-  MODIFY `matchId` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `matchId` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=22;
 
 --
 -- AUTO_INCREMENT for table `media`
 --
 ALTER TABLE `media`
-  MODIFY `mediaId` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `mediaId` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
 -- AUTO_INCREMENT for table `players`
 --
 ALTER TABLE `players`
-  MODIFY `playerId` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `playerId` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT for table `sports`
 --
 ALTER TABLE `sports`
-  MODIFY `sportsId` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
+  MODIFY `sportsId` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
 
 --
 -- AUTO_INCREMENT for table `sports_events`
 --
 ALTER TABLE `sports_events`
-  MODIFY `sportEventsId` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `sportEventsId` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT for table `teams`
@@ -381,13 +476,13 @@ ALTER TABLE `teams`
 -- AUTO_INCREMENT for table `teams_events`
 --
 ALTER TABLE `teams_events`
-  MODIFY `teamEventId` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `teamEventId` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=25;
 
 --
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
 
 --
 -- Constraints for dumped tables
