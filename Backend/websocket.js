@@ -7,11 +7,11 @@ const initializeSocket = (httpServer) => {
     cors: {
       origin: [
         'http://localhost:5173',
-        'http://localhost:5174',
-        'http://localhost:5175', 
-        'http://localhost:5177',
-        'https://ncf-sems.vercel.app',
-        'https://ncf-sems.onrender.com',
+        // // 'http://localhost:5174',
+        // // 'http://localhost:5175', 
+        // // 'http://localhost:5177',
+        // // 'https://ncf-sems.vercel.app',
+        // // 'https://ncf-sems.onrender.com',
         'http://sems-frontend.s3-website-ap-northeast-1.amazonaws.com',
       ],
       methods: ["GET", "POST"],

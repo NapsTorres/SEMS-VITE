@@ -16,10 +16,10 @@ const PORT = process.env.PORT || 5000;
 const corsOptions = {
     origin: [
         'http://localhost:5173',
-        'http://localhost:5174',
-        'http://localhost:5175',
-        'http://localhost:5177',
-        'https://ncf-sems.vercel.app',
+        // // 'http://localhost:5174',
+        // // 'http://localhost:5175',
+        // // 'http://localhost:5177',
+        // // 'https://ncf-sems.vercel.app',
         'http://sems-frontend.s3-website-ap-northeast-1.amazonaws.com'
     ],
     credentials: true,
