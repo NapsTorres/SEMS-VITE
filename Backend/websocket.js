@@ -11,7 +11,8 @@ const initializeSocket = (httpServer) => {
         'http://localhost:5175', 
         'http://localhost:5177',
         'https://ncf-sems.vercel.app',
-        'https://ncf-sems.onrender.com'
+        'https://ncf-sems.onrender.com',
+        'http://sems-frontend.s3-website-ap-northeast-1.amazonaws.com',
       ],
       methods: ["GET", "POST"],
       credentials: true

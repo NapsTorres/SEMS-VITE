@@ -10,7 +10,7 @@ const bodyparser = require("body-parser");
 const { userRouter, teamsRouter, eventsRouter, sportsRouter, gameRouter, mediaRouter } = require("./router/main.router.js");
 
 // Use environment variable PORT assigned by EB, fallback to 3006 for local testing
-const PORT = process.env.PORT || 3006;
+const PORT = process.env.PORT || 5000;
 
 // CORS options
 const corsOptions = {
